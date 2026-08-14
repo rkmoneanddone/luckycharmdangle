@@ -1,36 +1,36 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LuckyCoinDangle : ImageDangleBase
+public sealed class NimbuMirchiDangle : ImageDangleBase
 {
     public override string Id =>
-        "lucky_coin";
+        "nimbu_mirchi";
 
     public override string Name =>
-        "Lucky Coin";
+        "Nimbu Mirchi";
 
     public override string Description =>
-        "An ornate Chinese lucky coin talisman with red cord, jade beads, gold accents and symbols of prosperity.";
+        "A traditional Indian nimbu mirchi protection charm with chillies, lemon, bells and Nazar.";
 
     public override string Category =>
-        "Luck";
+    "Protection";
 
-    public override string Collection =>
-        "Lucky Charms";
+public override string Collection =>
+    "Lucky Charms";
 
     public override bool IsPremium =>
-        true;
+        false;
 
     public override bool IsSeasonal =>
         false;
 
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/rakhi_nimbu_mirchi.png";
 
     protected override double ImageWidth =>
         145;
 
     protected override double ImageHeight =>
-        220;
+        210;
 
     protected override double ImageScaleX =>
         1.0;

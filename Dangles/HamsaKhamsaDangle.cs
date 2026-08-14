@@ -1,21 +1,21 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LuckyCoinDangle : ImageDangleBase
+public sealed class HamsaKhamsaDangle : ImageDangleBase
 {
     public override string Id =>
-        "lucky_coin";
+        "hamsa_khamsa";
 
     public override string Name =>
-        "Lucky Coin";
+        "Hamsa / Khamsa";
 
     public override string Description =>
-        "An ornate Chinese lucky coin talisman with red cord, jade beads, gold accents and symbols of prosperity.";
+        "A jeweled Hamsa protection talisman with a Nazar eye, blue gemstones and gold filigree.";
 
-    public override string Category =>
-        "Luck";
+   public override string Category =>
+    "Protection";
 
-    public override string Collection =>
-        "Lucky Charms";
+public override string Collection =>
+    "Lucky Charms";
 
     public override bool IsPremium =>
         true;
@@ -24,7 +24,7 @@ public sealed class LuckyCoinDangle : ImageDangleBase
         false;
 
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/hamsa_khamsa.png";
 
     protected override double ImageWidth =>
         145;

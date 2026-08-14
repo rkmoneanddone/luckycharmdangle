@@ -476,7 +476,7 @@ public partial class CharmPickerWindow : Window
             new Border
             {
                 Width = 165,
-                Height = 255,
+                Height = 300,
                 Margin = new Thickness(6),
 
                 Padding =
@@ -513,7 +513,7 @@ public partial class CharmPickerWindow : Window
         var preview =
             new Border
             {
-                Height = 155,
+                Height = 215,
 
                 Background =
                     Champagne.ToBrush(),
@@ -535,7 +535,7 @@ public partial class CharmPickerWindow : Window
     new Canvas
     {
         Width = 120,
-        Height = 155
+        Height = 215
     };
 
 
@@ -579,7 +579,7 @@ public partial class CharmPickerWindow : Window
             new Canvas
             {
                 Width = 120,
-                Height = 155
+                Height = 215
             };
 
         previewHost.Children.Add(
@@ -900,7 +900,7 @@ public partial class CharmPickerWindow : Window
             {
                 Width = 145,
 
-                Height = 250,
+                Height = 300,
 
                 Margin =
                     new Thickness(4),
@@ -949,7 +949,7 @@ public partial class CharmPickerWindow : Window
         var preview =
             new Border
             {
-                Height = 155,
+                Height = 215,
 
                 Background =
                     Champagne.ToBrush(),
@@ -970,7 +970,7 @@ public partial class CharmPickerWindow : Window
     new Canvas
     {
         Width = 120,
-        Height = 155
+        Height = 215
     };
 
 
@@ -999,7 +999,7 @@ public partial class CharmPickerWindow : Window
             new Canvas
             {
                 Width = 120,
-                Height = 155
+                Height = 215
             };
 
         previewHost.Children.Add(
@@ -1136,7 +1136,7 @@ public partial class CharmPickerWindow : Window
                 TextWrapping =
                     TextWrapping.Wrap,
 
-                MaxHeight = 27
+                MaxHeight = 40
             };
 
 

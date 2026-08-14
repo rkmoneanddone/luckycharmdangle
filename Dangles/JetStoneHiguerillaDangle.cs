@@ -1,18 +1,18 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LuckyCoinDangle : ImageDangleBase
+public sealed class JetStoneHiguerillaDangle : ImageDangleBase
 {
     public override string Id =>
-        "lucky_coin";
+        "jet_stone_higuerilla";
 
     public override string Name =>
-        "Lucky Coin";
+        "Jet Stone / Higuerilla";
 
     public override string Description =>
-        "An ornate Chinese lucky coin talisman with red cord, jade beads, gold accents and symbols of prosperity.";
+        "A Latin American protection talisman featuring polished black higuerilla seeds, red cord, gold accents, Nazar eyes and traditional good-luck symbols.";
 
     public override string Category =>
-        "Luck";
+    "Protection";
 
     public override string Collection =>
         "Lucky Charms";
@@ -24,7 +24,7 @@ public sealed class LuckyCoinDangle : ImageDangleBase
         false;
 
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/jet_stone_higuerilla.png";
 
     protected override double ImageWidth =>
         145;

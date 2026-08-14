@@ -13,6 +13,20 @@
 
   <ItemGroup>
     <Resource Include="Assets\Dangles\maneki_neko.png" />
+    <Resource Include="Assets\Dangles\rakhi_divine.png" />
+    <Resource Include="Assets\Dangles\rakhi_kundan_heart.png" />
+    <Resource Include="Assets\Dangles\rakhi_royal_peacock.png" />
+     <Resource Include="Assets\Dangles\rakhi_lotus_grace.png" />
+     <Resource Include="Assets\Dangles\rakhi_shree_ganesha.png" />
+     <Resource Include="Assets\Dangles\rakhi_lucky_elephant.png" />
+     <Resource Include="Assets\Dangles\jet_stone_higuerilla.png" />
+     <Resource Include="Assets\Dangles\rakhi_nimbu_mirchi.png" />
+     <Resource Include="Assets\Dangles\bhai_mere_hero_rakhi.png" />
+     <Resource Include="Assets\Dangles\lucky_coin.png" />
+     <Resource Include="Assets\Dangles\nazar_guardian.png" />
+     <Resource Include="Assets\Dangles\hamsa_khamsa.png" />
+     <Resource Include="Assets\Dangles\rakhi_evil_eye.png" />
+     <Resource Include="Assets\Dangles\cornicello.png" />
     <Resource Include="Assets\LuckyDangle.ico" />
     <Resource Include="Assets\LuckyDangle.png" />
   </ItemGroup>

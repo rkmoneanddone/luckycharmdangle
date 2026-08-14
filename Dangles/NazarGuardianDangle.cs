@@ -1,18 +1,18 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LuckyCoinDangle : ImageDangleBase
+public sealed class NazarGuardianDangle : ImageDangleBase
 {
     public override string Id =>
-        "lucky_coin";
+        "nazar_guardian";
 
     public override string Name =>
-        "Lucky Coin";
+        "Nazar Guardian";
 
     public override string Description =>
-        "An ornate Chinese lucky coin talisman with red cord, jade beads, gold accents and symbols of prosperity.";
+        "A powerful Indian-inspired protection charm with a guardian face, bells, chillies and lemon.";
 
     public override string Category =>
-        "Luck";
+        "Protection";
 
     public override string Collection =>
         "Lucky Charms";
@@ -24,7 +24,7 @@ public sealed class LuckyCoinDangle : ImageDangleBase
         false;
 
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/nazar_guardian.png";
 
     protected override double ImageWidth =>
         145;

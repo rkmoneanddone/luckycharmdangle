@@ -1,36 +1,36 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LuckyCoinDangle : ImageDangleBase
+public sealed class DivineRakhiDangle : ImageDangleBase
 {
     public override string Id =>
-        "lucky_coin";
+        "rakhi_divine";
 
     public override string Name =>
-        "Lucky Coin";
+        "Divine Rakhi";
 
     public override string Description =>
-        "An ornate Chinese lucky coin talisman with red cord, jade beads, gold accents and symbols of prosperity.";
+        "A radiant Om-inspired Rakhi with ruby gemstones, pearls and gold detailing.";
 
-    public override string Category =>
-        "Luck";
+  public override string Category =>
+    "Festive";
 
-    public override string Collection =>
-        "Lucky Charms";
+public override string Collection =>
+    "Rakhi";
 
     public override bool IsPremium =>
-        true;
-
-    public override bool IsSeasonal =>
         false;
 
+    public override bool IsSeasonal =>
+        true;
+
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/rakhi_divine.png";
 
     protected override double ImageWidth =>
         145;
 
     protected override double ImageHeight =>
-        220;
+        210;
 
     protected override double ImageScaleX =>
         1.0;

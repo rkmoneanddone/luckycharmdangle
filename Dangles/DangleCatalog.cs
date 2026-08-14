@@ -17,100 +17,59 @@ public static class DangleCatalog
     private static readonly List<IDangle> AllDangles =
     new()
     {
-        new RakhiDangle(),
-        new RoyalRakhiDangle(),
-        new PeacockRakhiDangle(),
+        // =================================================
+        // RAKHI COLLECTION
+        // =================================================
+
+        new DivineRakhiDangle(),
+        new LotusGraceDangle(),
+        new ShreeGaneshaDangle(),
+        new KundanHeartDangle(),
+        new RoyalPeacockRakhiDangle(),
+        new LuckyElephantDangle(),
+        new BhaiMereHeroRakhiDangle(),
+
+        // =================================================
+        // LUCKY CHARMS COLLECTION
+        // =================================================
+
+        new EvilEyeShieldDangle(),
         new LuckyCoinDangle(),
-        new ManekiNekoDangle()
+        new ManekiNekoDangle(),
+        new NimbuMirchiDangle(),
+        new NazarGuardianDangle(),
+        new HamsaKhamsaDangle(),
+        new CornicelloDangle(),
+        new JetStoneHiguerillaDangle(),
     };
 
+    public static IReadOnlyList<IDangle> GetAll() => AllDangles;
 
-    // =====================================================
-    // ALL DANGLERS
-    // =====================================================
+    public static IReadOnlyList<IDangle> GetFree() =>
+        AllDangles.Where(d => !d.IsPremium).ToList();
 
-    public static IReadOnlyList<IDangle> GetAll()
-    {
-        return AllDangles;
-    }
+    public static IReadOnlyList<IDangle> GetPremium() =>
+        AllDangles.Where(d => d.IsPremium).ToList();
 
+    public static IReadOnlyList<IDangle> GetSeasonal() =>
+        AllDangles.Where(d => d.IsSeasonal).ToList();
 
-    // =====================================================
-    // FREE DANGLERS
-    // =====================================================
-
-    public static IReadOnlyList<IDangle> GetFree()
-    {
-        return AllDangles
-            .Where(d => !d.IsPremium)
+    public static IReadOnlyList<IDangle> GetCategory(string category) =>
+        AllDangles
+            .Where(d => d.Category.Equals(
+                category,
+                System.StringComparison.OrdinalIgnoreCase))
             .ToList();
-    }
 
-
-    // =====================================================
-    // PREMIUM DANGLERS
-    // =====================================================
-
-    public static IReadOnlyList<IDangle> GetPremium()
-    {
-        return AllDangles
-            .Where(d => d.IsPremium)
-            .ToList();
-    }
-
-
-    // =====================================================
-    // SEASONAL DANGLERS
-    // =====================================================
-
-    public static IReadOnlyList<IDangle> GetSeasonal()
-    {
-        return AllDangles
-            .Where(d => d.IsSeasonal)
-            .ToList();
-    }
-
-
-    // =====================================================
-    // CATEGORY
-    // =====================================================
-
-    public static IReadOnlyList<IDangle> GetCategory(
-        string category)
-    {
-        return AllDangles
-            .Where(d =>
-                d.Category.Equals(
-                    category,
-                    System.StringComparison.OrdinalIgnoreCase))
-            .ToList();
-    }
-
-
-    // =====================================================
-    // CATEGORY NAMES
-    // =====================================================
-
-    public static IReadOnlyList<string> GetCategories()
-    {
-        return AllDangles
+    public static IReadOnlyList<string> GetCategories() =>
+        AllDangles
             .Select(d => d.Category)
             .Distinct()
             .OrderBy(c => c)
             .ToList();
-    }
 
-
-    // =====================================================
-    // FIND BY NAME
-    // =====================================================
-
-    public static IDangle? Find(
-        string name)
-    {
-        return AllDangles.FirstOrDefault(
-            d => d.Name.Equals(
-                name,
-                System.StringComparison.OrdinalIgnoreCase));
-    }
+    public static IDangle? Find(string name) =>
+        AllDangles.FirstOrDefault(d => d.Name.Equals(
+            name,
+            System.StringComparison.OrdinalIgnoreCase));
 }

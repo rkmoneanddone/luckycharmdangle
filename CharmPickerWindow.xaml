@@ -205,7 +205,7 @@
             <!-- ================================================= -->
 
             <Grid Grid.Row="0"
-                  Height="62"
+                  Height="42"
                   Margin="0,0,0,8">
 
                 <Grid.ColumnDefinitions>
@@ -221,23 +221,32 @@
                             HorizontalAlignment="Left"
                             Margin="0">
 
-                    <TextBlock Text="Choose your dangle"
-                               FontFamily="Georgia"
-                               FontSize="30"
-                               FontWeight="Bold"
-                               Foreground="#13233B"/>
+                    <!-- TITLE + SUBTITLE — SAME LINE -->
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
 
-                    <TextBlock Text="Find the little companion you want on your desktop."
-                               FontSize="14"
-                               Foreground="#708097"
-                               Margin="0,4,0,0"/>
+                        <TextBlock Text="Choose your dangle"
+                                   FontFamily="Georgia"
+                                   FontSize="30"
+                                   FontWeight="Bold"
+                                   Foreground="#13233B"
+                                   VerticalAlignment="Center"/>
 
+                        <TextBlock Text="Find the little companion you want on your desktop."
+                                   FontSize="14"
+                                   Foreground="#708097"
+                                   VerticalAlignment="Center"
+                                   Margin="16,7,0,0"/>
+
+                    </StackPanel>
+
+                    <!-- GOLD ACCENT -->
                     <Border Width="62"
                             Height="3"
                             Background="#C79A31"
                             CornerRadius="2"
                             HorizontalAlignment="Left"
-                            Margin="0,8,0,0"/>
+                            Margin="0,6,0,0"/>
 
                 </StackPanel>
 
@@ -316,7 +325,7 @@
 
                     <Grid x:Name="CollectionHeader"
                           Grid.Row="0"
-                          Height="62"
+                          Height="42"
                           Margin="0,0,0,4">
 
                         <Grid.ColumnDefinitions>
@@ -474,7 +483,7 @@
 
                     <Button Content="Cancel"
                             Width="105"
-                            Height="42"
+                            Height="34"
                             Margin="0,0,9,0"
                             Padding="18,0"
                             Style="{StaticResource PremiumCancelButton}"
@@ -482,7 +491,7 @@
 
                     <Button Content="✦  Use Dangle"
                             Width="145"
-                            Height="42"
+                            Height="34"
                             Padding="18,0"
                             Style="{StaticResource PremiumUseButton}"
                             Click="ApplyButton_Click"/>
