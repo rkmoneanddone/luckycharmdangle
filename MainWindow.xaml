@@ -1,0 +1,158 @@
+<Window x:Class="LuckyDangle.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize"
+        Width="320"
+        Height="320"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+
+    <Canvas x:Name="Root">
+
+        <!-- ================================================= -->
+        <!-- SMALL MOVE HANDLE                                -->
+        <!-- Only this small area moves the WHOLE dangle      -->
+        <!-- ================================================= -->
+
+        <Rectangle x:Name="MoveHandle"
+                   Canvas.Left="135"
+                   Canvas.Top="0"
+                   Width="50"
+                   Height="35"
+                   Fill="Transparent"
+                   Cursor="SizeAll"
+                   MouseLeftButtonDown="MoveHandle_MouseLeftButtonDown"
+                   MouseMove="MoveHandle_MouseMove"
+                   MouseLeftButtonUp="MoveHandle_MouseLeftButtonUp"/>
+
+
+        <!-- ================================================= -->
+        <!-- FIXED ANCHOR                                      -->
+        <!-- ================================================= -->
+
+        <Ellipse Canvas.Left="157"
+                 Canvas.Top="5"
+                 Width="6"
+                 Height="6"
+                 Fill="#8A6A35"
+                 IsHitTestVisible="False"/>
+
+
+        <!-- ================================================= -->
+        <!-- STRING                                            -->
+        <!-- ================================================= -->
+
+        <Line x:Name="DangleString"
+              X1="160"
+              Y1="8"
+              X2="160"
+              Y2="82"
+              Stroke="#B88B45"
+              StrokeThickness="2"
+              IsHitTestVisible="False"/>
+
+
+        <!-- ================================================= -->
+        <!-- BEAD                                              -->
+        <!-- ================================================= -->
+
+        <Ellipse x:Name="DangleBead"
+                 Canvas.Left="152"
+                 Canvas.Top="74"
+                 Width="16"
+                 Height="16"
+                 Fill="#D6A93A"
+                 Stroke="#7A571B"
+                 StrokeThickness="1"
+                 IsHitTestVisible="False"/>
+
+
+        <!-- ================================================= -->
+        <!-- CHARM                                             -->
+        <!-- Only this is pulled with spring physics          -->
+        <!-- ================================================= -->
+
+        <Canvas x:Name="CharmCanvas"
+                Canvas.Left="115"
+                Canvas.Top="82"
+                Width="90"
+                Height="115"
+                Cursor="Hand"
+                MouseLeftButtonDown="Charm_MouseLeftButtonDown"
+                MouseMove="Charm_MouseMove"
+                MouseLeftButtonUp="Charm_MouseLeftButtonUp"
+                MouseRightButtonUp="Charm_MouseRightButtonUp">
+
+            <Ellipse Width="90"
+                     Height="90"
+                     Fill="#D72638"
+                     Stroke="#7A101B"
+                     StrokeThickness="2"/>
+
+            <Ellipse Canvas.Left="12"
+                     Canvas.Top="12"
+                     Width="66"
+                     Height="66"
+                     Fill="#F6D365"
+                     Stroke="#9C6D00"
+                     StrokeThickness="2"/>
+
+            <TextBlock Text="福"
+                       FontSize="43"
+                       FontWeight="Bold"
+                       Foreground="#8A101A"
+                       Width="90"
+                       Height="90"
+                       TextAlignment="Center"
+                       VerticalAlignment="Center"
+                       Padding="0,5,0,0"/>
+
+            <!-- Tassel -->
+
+            <Rectangle Canvas.Left="43"
+                       Canvas.Top="88"
+                       Width="4"
+                       Height="22"
+                       Fill="#B51F2D"/>
+
+            <Ellipse Canvas.Left="37"
+                     Canvas.Top="106"
+                     Width="16"
+                     Height="10"
+                     Fill="#B51F2D"/>
+
+        </Canvas>
+
+
+        <!-- ================================================= -->
+        <!-- CONTEXT MENU                                      -->
+        <!-- ================================================= -->
+
+        <Canvas.ContextMenu>
+            <ContextMenu x:Name="Menu">
+
+                <MenuItem Header="Change Dangle"
+                          Click="ChangeDangle_Click"/>
+
+                <MenuItem Header="Random Dangle"
+                          Click="RandomDangle_Click"/>
+
+                <Separator/>
+
+                <MenuItem Header="Swing"
+                          Click="Swing_Click"/>
+
+                <MenuItem Header="Exit"
+                          Click="Exit_Click"/>
+
+            </ContextMenu>
+        </Canvas.ContextMenu>
+
+    </Canvas>
+
+</Window>
