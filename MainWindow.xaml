@@ -144,11 +144,16 @@
 
                 <Separator/>
 
-                <MenuItem Header="Swing"
-                          Click="Swing_Click"/>
+               <MenuItem Header="Swing"
+          Click="Swing_Click"/>
+
+                <Separator/>
+
+                <MenuItem Header="About Lucky Dangle"
+                        Click="AboutLuckyDangle_Click"/>
 
                 <MenuItem Header="Exit"
-                          Click="Exit_Click"/>
+                        Click="Exit_Click"/>
 
             </ContextMenu>
         </Canvas.ContextMenu>

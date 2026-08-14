@@ -1,0 +1,78 @@
+<Window x:Class="LuckyDangle.UI.About.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About Lucky Dangle"
+        Width="420"
+        Height="430"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#FFF9F0"
+        ShowInTaskbar="False"
+        MouseLeftButtonDown="AboutWindow_MouseLeftButtonDown">
+
+    <Border Padding="28">
+
+        <StackPanel>
+
+            <Image Source="/LuckyDangle;component/Assets/LuckyDangle.png"
+                   Width="108"
+                   Height="108"
+                   Stretch="Uniform"
+                   SnapsToDevicePixels="True"
+                   UseLayoutRounding="True"/>
+
+            <TextBlock Text="Lucky Dangle"
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="#4A3218"
+                       HorizontalAlignment="Center"/>
+
+            <TextBlock Text="Version 0.1.0"
+                       FontSize="13"
+                       Foreground="#806B55"
+                       HorizontalAlignment="Center"
+                       Margin="0,4,0,18"/>
+
+            <TextBlock Text="A tiny transparent desktop companion that brings interactive lucky charms to your Windows desktop."
+                       FontSize="14"
+                       Foreground="#4A4036"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       MaxWidth="330"
+                       Margin="0,0,0,22"/>
+
+            <TextBlock Text="Developed by"
+                       FontSize="12"
+                       Foreground="#806B55"
+                       HorizontalAlignment="Center"/>
+
+            <TextBlock Text="Rohit Kumar Mallick"
+                       FontSize="15"
+                       FontWeight="SemiBold"
+                       Foreground="#4A3218"
+                       HorizontalAlignment="Center"
+                       Margin="0,3,0,12"/>
+
+            <TextBlock Text="Support"
+                       FontSize="12"
+                       Foreground="#806B55"
+                       HorizontalAlignment="Center"/>
+
+            <TextBlock Text="wishugreens@gmail.com"
+                       FontSize="14"
+                       Foreground="#8A5A18"
+                       HorizontalAlignment="Center"
+                       Margin="0,3,0,20"/>
+
+            <Button Content="Close"
+                    Width="100"
+                    Height="32"
+                    HorizontalAlignment="Center"
+                    Click="Close_Click"/>
+
+        </StackPanel>
+
+    </Border>
+
+</Window>

@@ -8,6 +8,7 @@ using System.Windows.Shapes;
 using System.Linq;
 using System.IO;
 using System.Text.Json;
+using LuckyDangle.UI.About;
 
 using LuckyDangle.Dangles;
 
@@ -463,6 +464,19 @@ public partial class MainWindow : Window
         }
     }
 
+
+    private void AboutLuckyDangle_Click(
+    object sender,
+    RoutedEventArgs e)
+    {
+        var aboutWindow =
+            new AboutWindow
+            {
+                Owner = this
+            };
+
+        aboutWindow.ShowDialog();
+    }
 
     // =====================================================
     // EXIT
