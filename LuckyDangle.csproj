@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
@@ -7,8 +8,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>LuckyDangle</AssemblyName>
     <RootNamespace>LuckyDangle</RootNamespace>
+    <ApplicationIcon>Assets\LuckyDangle.ico</ApplicationIcon>
   </PropertyGroup>
+
   <ItemGroup>
     <Resource Include="Assets\Dangles\maneki_neko.png" />
-</ItemGroup>
+    <Resource Include="Assets\LuckyDangle.ico" />
+  </ItemGroup>
+
 </Project>
