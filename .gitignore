@@ -1,8 +1,59 @@
+# ==========================================
+# .NET / Visual Studio
+# ==========================================
+
 bin/
 obj/
 .vs/
 .vscode/
+
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
+
+
+# ==========================================
+# Build / generated output
+# ==========================================
+
+StorePackage/PackageRoot/
+StorePackage/*.msix
+StorePackage/*.msixbundle
+
 *.zip
-StorePackage/
+
+
+# ==========================================
+# Development certificates
+# NEVER commit private signing certificates
+# ==========================================
+
+*.pfx
+*.p12
+*.key
+
+
+# ==========================================
+# Temporary / backup files
+# ==========================================
+
+*.pfx.backup
+*.bak
+*.tmp
+*.png.backup
+
+
+# ==========================================
+# OS files
+# ==========================================
+
+Thumbs.db
+.DS_Store
+
+
+# ==========================================
+# Logs
+# ==========================================
+
+*.log
