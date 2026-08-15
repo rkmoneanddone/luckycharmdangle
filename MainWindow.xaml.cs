@@ -9,6 +9,7 @@ using System.Linq;
 using System.IO;
 using System.Text.Json;
 using LuckyDangle.UI.About;
+using LuckyDangle.UI.Support;
 
 using LuckyDangle.Dangles;
 
@@ -476,6 +477,21 @@ public partial class MainWindow : Window
             };
 
         aboutWindow.ShowDialog();
+    }
+
+    private void SupportLuckyCharm_Click(
+    object sender,
+    RoutedEventArgs e)
+    {
+        var supportWindow =
+            new SupportWindow
+            {
+                Owner = this,
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterScreen
+            };
+
+        supportWindow.ShowDialog();
     }
 
     // =====================================================

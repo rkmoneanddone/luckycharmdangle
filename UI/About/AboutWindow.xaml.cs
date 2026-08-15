@@ -1,7 +1,8 @@
 using System.Windows;
 using System.Windows.Input;
-namespace LuckyDangle.UI.About;
+using LuckyDangle.UI.Support;
 
+namespace LuckyDangle.UI.About;
 
 public partial class AboutWindow : Window
 {
@@ -10,6 +11,11 @@ public partial class AboutWindow : Window
         InitializeComponent();
     }
 
+
+    // =====================================================
+    // CLOSE
+    // =====================================================
+
     private void Close_Click(
         object sender,
         RoutedEventArgs e)
@@ -17,15 +23,38 @@ public partial class AboutWindow : Window
         Close();
     }
 
-    private void AboutWindow_MouseLeftButtonDown(
-    object sender,
-    MouseButtonEventArgs e)
-{
-    if (e.LeftButton == MouseButtonState.Pressed)
+
+    // =====================================================
+    // SUPPORT LUCKYCHARM
+    // =====================================================
+
+    private void SupportLuckyCharm_Click(
+        object sender,
+        RoutedEventArgs e)
     {
-        DragMove();
+        var supportWindow =
+            new SupportWindow
+            {
+                Owner = this,
+                WindowStartupLocation =
+                    WindowStartupLocation.CenterScreen
+            };
+
+        supportWindow.ShowDialog();
+    }
+
+
+    // =====================================================
+    // DRAG WINDOW
+    // =====================================================
+
+    private void AboutWindow_MouseLeftButtonDown(
+        object sender,
+        MouseButtonEventArgs e)
+    {
+        if (e.LeftButton == MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
     }
 }
-    
-}
-

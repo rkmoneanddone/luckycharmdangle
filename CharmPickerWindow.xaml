@@ -325,7 +325,7 @@
 
                     <Grid x:Name="CollectionHeader"
                           Grid.Row="0"
-                          Height="42"
+                          Height="46"
                           Margin="0,0,0,4">
 
                         <Grid.ColumnDefinitions>
@@ -479,7 +479,28 @@
                 <!-- BUTTONS -->
 
                 <StackPanel Grid.Column="1"
-                            Orientation="Horizontal">
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+
+                    <!-- BUY COFFEE -->
+
+                    <Button x:Name="BuyCoffeeButton"
+                            Content="☕  Buy Rohit a Coffee"
+                            Width="165"
+                            Height="34"
+                            Margin="0,0,12,0"
+                            Background="Transparent"
+                            Foreground="#8A641C"
+                            BorderThickness="0"
+                            FontFamily="Georgia"
+                            FontStyle="Italic"
+                            FontWeight="SemiBold"
+                            FontSize="13"
+                            Cursor="Hand"
+                            Click="BuyCoffeeButton_Click"/>
+
+
+                    <!-- CANCEL -->
 
                     <Button Content="Cancel"
                             Width="105"
@@ -488,6 +509,9 @@
                             Padding="18,0"
                             Style="{StaticResource PremiumCancelButton}"
                             Click="CloseButton_Click"/>
+
+
+                    <!-- USE DANGLE -->
 
                     <Button Content="✦  Use Dangle"
                             Width="145"

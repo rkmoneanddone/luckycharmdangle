@@ -1407,6 +1407,23 @@ public partial class CharmPickerWindow : Window
             parts);
     }
 
+    // =========================================================
+    // Support
+    // =========================================================
+
+    private void BuyCoffeeButton_Click(
+    object sender,
+    RoutedEventArgs e)
+    {
+        var window =
+            new UI.Support.SupportWindow
+            {
+                Owner = this
+            };
+
+        window.ShowDialog();
+    }
+
 
     // =========================================================
     // APPLY
