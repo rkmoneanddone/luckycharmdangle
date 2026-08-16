@@ -357,7 +357,7 @@ else {
     Write-Host ""
     Write-Host "Use:"
     Write-Host ""
-    Write-Host ".\Build-LuckyCharm.ps1 -Install"
+    Write-Host ".\Build-LuckyCharm-LocalBuild.ps1 -Install"
     Write-Host ""
     Write-Host "to build AND install/upgrade."
 }

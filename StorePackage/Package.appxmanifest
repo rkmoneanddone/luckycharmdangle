@@ -15,13 +15,25 @@
   <Resources>
     <Resource Language="en-us" />
   </Resources>
-  <Applications>
-    <Application Id="luckyDangle" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="LuckyCharm" Description="A tiny transparent desktop companion that brings interactive lucky charms to your Windows desktop." BackgroundColor="transparent" Square150x150Logo="Assets\MedTile.png" Square44x44Logo="Assets\AppList.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\WideTile.png" />
-      </uap:VisualElements>
-    </Application>
-  </Applications>
+  <Application Id="luckyDangle" Executable="$targetnametoken$.exe" EntryPoint="Windows.FullTrustApplication">
+  <uap:VisualElements DisplayName="LuckyCharm" Description="A tiny transparent desktop companion that brings interactive lucky charms to your Windows desktop." BackgroundColor="transparent" Square150x150Logo="Assets\MedTile.png" Square44x44Logo="Assets\AppList.png">
+    <uap:DefaultTile Wide310x150Logo="Assets\WideTile.png" />
+  </uap:VisualElements>
+
+  <Extensions>
+    <desktop:Extension
+        Category="windows.startupTask"
+        Executable="LuckyDangle.exe"
+        EntryPoint="Windows.FullTrustApplication">
+
+      <desktop:StartupTask
+          TaskId="LuckyCharmStartup"
+          Enabled="true"
+          DisplayName="LuckyCharm" />
+
+    </desktop:Extension>
+  </Extensions>
+</Application>
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>

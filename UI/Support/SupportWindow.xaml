@@ -248,15 +248,6 @@
                                                         BorderBrush="#D8CCB8"
                                                         Click="ChangeAmount_Click"/>
 
-                                                <Button Content="Close"
-                                                        Width="70"
-                                                        Height="29"
-                                                        Margin="3"
-                                                        Background="Transparent"
-                                                        Foreground="#6E6254"
-                                                        BorderBrush="#D8CCB8"
-                                                        Click="Close_Click"/>
-
                                         </StackPanel>
 
                                 </StackPanel>

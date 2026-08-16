@@ -28,6 +28,21 @@ public static class DangleCatalog
         new RoyalPeacockRakhiDangle(),
         new LuckyElephantDangle(),
         new BhaiMereHeroRakhiDangle(),
+        new BhaiPremRakhiDangle(),
+        new BhabhiPremRakhiDangle(),
+        new BehenKaPyaarRakhiDangle(),
+
+        // =================================================
+            // SPIRITUAL COLLECTION
+        // =================================================
+
+        new OmSpiritualDangle(),
+        new ShreeYantraSpiritualDangle(),
+        new TrishulSpiritualDangle(),
+        new LotusPadmaSpiritualDangle(),
+        new KrishnaSpiritualDangle(),
+        new GaneshaSpiritualDangle(),
+        new LakshmiSpiritualDangle(),
 
         // =================================================
         // LUCKY CHARMS COLLECTION

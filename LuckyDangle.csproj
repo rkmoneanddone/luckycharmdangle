@@ -29,6 +29,16 @@
      <Resource Include="Assets\Dangles\cornicello.png" />
     <Resource Include="Assets\LuckyDangle.ico" />
     <Resource Include="Assets\LuckyDangle.png" />
+    <Resource Include="Assets\Dangles\rakhi_bhai_prem.png" />
+    <Resource Include="Assets\Dangles\rakhi_bhabhi_prem.png" />
+    <Resource Include="Assets\Dangles\rakhi_behen_ka_pyaar.png" />
+    <Resource Include="Assets\Dangles\spiritual_om.png" />
+    <Resource Include="Assets\Dangles\spiritual_shree_yantra.png" />
+    <Resource Include="Assets\Dangles\spiritual_trishul.png" />
+    <Resource Include="Assets\Dangles\spiritual_lotus_padma.png" />
+    <Resource Include="Assets\Dangles\spiritual_krishna.png" />
+    <Resource Include="Assets\Dangles\spiritual_ganesha.png" />
+    <Resource Include="Assets\Dangles\spiritual_lakshmi.png" />
     <!-- LuckyCharm Support -->
     <Resource Include="Assets\Support\lucky_charm_upi_qr.jpg" />
     <PackageReference Include="QRCoder"
