@@ -1,15 +1,25 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 # ============================================================
 # Lucky Dangle - Microsoft Store Production Builder
 #
+# PURPOSE:
+#   Build the next Microsoft Store package automatically.
+#
+# VERSIONING:
+#   Automatically increments the third numeric component.
+#
+#   Example:
+#       0.1.3.0 -> 0.1.4.0
+#       0.1.4.0 -> 0.1.5.0
+#
 # IMPORTANT:
-# - Does NOT modify StorePackage\Package.appxmanifest
-# - Does NOT use the local devcert.pfx
-# - Does NOT install the package
-# - Uses the Microsoft Store identity supplied by Partner Center
-# - Builds the current source version exactly as-is
-# - Produces:
+# - Source manifest is updated ONLY after successful packaging.
+# - Does NOT use devcert.pfx.
+# - Does NOT install the package.
+# - Does NOT create a duplicate StartupTask.
+# - Preserves the existing LuckyCharmStartup from the source manifest.
+# - Creates:
 #       StorePackage\StoreUpload\LuckyDangle-x64.msix
 #       StorePackage\StoreUpload\LuckyDangle-x64.msixupload
 # ============================================================
@@ -63,7 +73,7 @@ Write-Host "================================================" -ForegroundColor C
 Write-Host ""
 
 # ============================================================
-# 1. Validate files/tools
+# 1. Validate tools and source files
 # ============================================================
 
 Write-Host "[1/8] Checking tools and source files..." `
@@ -85,8 +95,18 @@ if (-not (Test-Path $AssetsSource)) {
     throw "Store assets folder not found: $AssetsSource"
 }
 
+if (-not (Test-Path $SupportSource)) {
+    Write-Host `
+        "WARNING: Support assets folder not found: $SupportSource" `
+        -ForegroundColor Yellow
+}
+
 # ============================================================
-# 2. Read current version
+# 2. Read and increment version
+#
+# IMPORTANT:
+# The source manifest is NOT saved yet.
+# We only save it after the Store package is successfully created.
 # ============================================================
 
 [xml]$sourceManifestXml = `
@@ -102,9 +122,17 @@ if ($null -eq $sourceIdentityNode) {
 $currentVersion = `
     [version]$sourceIdentityNode.Version
 
-Write-Host "Source version : $currentVersion"
-Write-Host "Store identity : $StorePackageName"
-Write-Host "Store publisher: $StorePublisher"
+$newVersion = [version]::new(
+    $currentVersion.Major,
+    $currentVersion.Minor,
+    $currentVersion.Build + 1,
+    0
+)
+
+Write-Host "Current version : $currentVersion"
+Write-Host "New version     : $newVersion"
+Write-Host "Store identity  : $StorePackageName"
+Write-Host "Store publisher : $StorePublisher"
 Write-Host ""
 
 # ============================================================
@@ -159,13 +187,17 @@ Copy-Item `
     -Recurse `
     -Force
 
+if (-not (Test-Path (Join-Path $PackageRoot "LuckyDangle.exe"))) {
+    throw "LuckyDangle.exe was not copied into StorePackageRoot."
+}
+
 Write-Host "Application copied." `
     -ForegroundColor Green
 
 Write-Host ""
 
 # ============================================================
-# 5. Copy assets
+# 5. Copy assets and create Store manifest
 # ============================================================
 
 Write-Host "[4/8] Copying Store assets..." `
@@ -195,10 +227,14 @@ Write-Host "Assets copied." `
 Write-Host ""
 
 # ============================================================
-# 6. Create Store manifest
+# Create Store manifest
 #
 # IMPORTANT:
-# The source manifest is NEVER modified.
+# - Start from the corrected source manifest.
+# - Change ONLY Store identity/publisher/display/version.
+# - DO NOT ADD LuckyCharmStartup here.
+#
+# The source manifest already contains the startup task.
 # ============================================================
 
 Write-Host "[5/8] Creating Store manifest..." `
@@ -210,93 +246,36 @@ $StoreManifestPath = `
 [xml]$storeManifestXml = `
     Get-Content $SourceManifest -Raw
 
+# ------------------------------------------------------------
 # Store identity
+# ------------------------------------------------------------
+
 $storeManifestXml.Package.Identity.Name = `
     $StorePackageName
 
 $storeManifestXml.Package.Identity.Publisher = `
     $StorePublisher
 
-# Keep the current project version
 $storeManifestXml.Package.Identity.Version = `
-    $currentVersion.ToString()
+    $newVersion.ToString()
 
-# Store publisher display name
+# ------------------------------------------------------------
+# Publisher display name
+# ------------------------------------------------------------
+
 $storeManifestXml.Package.Properties.PublisherDisplayName = `
     $StorePublisherDisplayName
 
-# Microsoft Store reserved product name
+# ------------------------------------------------------------
+# Store display name
+# ------------------------------------------------------------
+
 $storeManifestXml.Package.Properties.DisplayName = `
     "Lucky Dangle"
 
-# ============================================================
-# Enable Windows startup for packaged LuckyCharm
-# ============================================================
-
-$applicationNode =
-    $storeManifestXml.Package.Applications.Application
-
-if ($null -eq $applicationNode) {
-    throw "Application node not found in Store manifest."
-}
-
-$extensionsNode =
-    $applicationNode.Extensions
-
-if ($null -eq $extensionsNode) {
-    $extensionsNode =
-        $storeManifestXml.CreateElement(
-            "Extensions",
-            "http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-        )
-
-    [void]$applicationNode.AppendChild($extensionsNode)
-}
-
-$startupExtension =
-    $storeManifestXml.CreateElement(
-        "desktop:Extension",
-        "http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-    )
-
-[void]$startupExtension.SetAttribute(
-    "Category",
-    "windows.startupTask"
-)
-
-[void]$startupExtension.SetAttribute(
-    "Executable",
-    "LuckyDangle.exe"
-)
-
-[void]$startupExtension.SetAttribute(
-    "EntryPoint",
-    "Windows.FullTrustApplication"
-)
-
-$startupTask =
-    $storeManifestXml.CreateElement(
-        "desktop:StartupTask",
-        "http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-    )
-
-[void]$startupTask.SetAttribute(
-    "TaskId",
-    "LuckyCharmStartup"
-)
-
-[void]$startupTask.SetAttribute(
-    "Enabled",
-    "true"
-)
-
-[void]$startupTask.SetAttribute(
-    "DisplayName",
-    "LuckyCharm"
-)
-
-[void]$startupExtension.AppendChild($startupTask)
-[void]$extensionsNode.AppendChild($startupExtension)
+# ------------------------------------------------------------
+# Save Store manifest ONLY inside StorePackageRoot
+# ------------------------------------------------------------
 
 $storeManifestXml.Save(
     $StoreManifestPath
@@ -308,13 +287,13 @@ Write-Host "Store manifest:" `
 
 Write-Host "  Name      : $StorePackageName"
 Write-Host "  Publisher : $StorePublisher"
-Write-Host "  Version   : $currentVersion"
+Write-Host "  Version   : $newVersion"
 Write-Host "  Display   : Lucky Dangle"
 
 Write-Host ""
 
 # ============================================================
-# 7. Verify Store manifest
+# 6. Verify Store manifest
 # ============================================================
 
 Write-Host "[6/8] Verifying Store package..." `
@@ -345,8 +324,8 @@ if ($verifiedIdentity.Publisher -ne $StorePublisher) {
     throw "Store package Publisher mismatch."
 }
 
-if ($verifiedIdentity.Version -ne $currentVersion.ToString()) {
-    throw "Store package Version mismatch."
+if ($verifiedIdentity.Version -ne $newVersion.ToString()) {
+    throw "Store package Version mismatch. Expected $newVersion, found $($verifiedIdentity.Version)."
 }
 
 $verifiedPublisherDisplayName = `
@@ -367,15 +346,23 @@ Write-Host "Store identity verified." `
     -ForegroundColor Green
 
 # ------------------------------------------------------------
-# Verify Windows startup task
+# Verify Applications wrapper
 # ------------------------------------------------------------
 
-$verifiedApplication =
+$verifiedApplication = `
     $verifiedStoreManifestXml.Package.Applications.Application
 
 if ($null -eq $verifiedApplication) {
-    throw "Store Application node was not found."
+    throw "Application node was not found inside Applications."
 }
+
+# ------------------------------------------------------------
+# Verify startup task already exists
+#
+# IMPORTANT:
+# We VERIFY it.
+# We DO NOT CREATE it.
+# ------------------------------------------------------------
 
 $verifiedStartupExtension =
     $verifiedApplication.Extensions.ChildNodes |
@@ -415,11 +402,11 @@ Write-Host "Windows startup task verified." `
 Write-Host ""
 
 # ============================================================
-# 8. Create Store MSIX
+# 7. Create Store MSIX
 #
-# Microsoft Store distribution handles production signing.
+# Microsoft Store handles production signing.
 #
-# We create the package without using our local devcert.pfx.
+# No devcert.pfx is used here.
 # ============================================================
 
 Write-Host "[7/8] Creating Store MSIX..." `
@@ -436,7 +423,7 @@ if (-not (Test-Path $OutputDir)) {
 
 $OutputMsix = Join-Path `
     $OutputDir `
-    "LuckyDangle-$currentVersion-x64.msix"
+    "LuckyDangle-$newVersion-x64.msix"
 
 if (Test-Path $OutputMsix) {
     Remove-Item $OutputMsix -Force
@@ -448,8 +435,6 @@ Write-Host "Manifest     : $StoreManifestPath"
 Write-Host "Output       : $OutputMsix"
 Write-Host ""
 
-# winapp package without --cert:
-# Store submission does not require a CA-trusted certificate.
 & winapp package `
     $PackageRoot `
     --manifest $StoreManifestPath `
@@ -464,22 +449,20 @@ if (-not (Test-Path $OutputMsix)) {
 }
 
 Write-Host ""
-Write-Host "MSIX created successfully." `
+Write-Host "MSIX package creation completed." `
     -ForegroundColor Green
 
 Write-Host ""
 
 # ============================================================
-# Create .msixupload
+# Create MSIXUPLOAD
 #
-# Microsoft Store format:
+# Contents:
 #
-#   LuckyDangle-0.1.2.0-x64.msix
+#   LuckyDangle-<VERSION>-x64.msix
 #   LuckyDangle.appxsym
 #
-#       ↓ ZIP
-#
-#   LuckyDangle-0.1.2.0-x64.msixupload
+# Then ZIP -> .msixupload
 # ============================================================
 
 Write-Host "[8/8] Creating MSIXUPLOAD..." `
@@ -487,19 +470,22 @@ Write-Host "[8/8] Creating MSIXUPLOAD..." `
 
 $UploadZip = Join-Path `
     $OutputDir `
-    "LuckyDangle-$currentVersion-x64.zip"
+    "LuckyDangle-$newVersion-x64.zip"
 
 $FinalUpload = Join-Path `
     $OutputDir `
-    "LuckyDangle-$currentVersion-x64.msixupload"
+    "LuckyDangle-$newVersion-x64.msixupload"
 
 $TempUploadDir = Join-Path `
     $OutputDir `
     "_upload_temp"
 
+# ------------------------------------------------------------
 # Clean previous temporary/output files
+# ------------------------------------------------------------
 
 if (Test-Path $TempUploadDir) {
+
     Remove-Item `
         $TempUploadDir `
         -Recurse `
@@ -507,15 +493,11 @@ if (Test-Path $TempUploadDir) {
 }
 
 if (Test-Path $UploadZip) {
-    Remove-Item `
-        $UploadZip `
-        -Force
+    Remove-Item $UploadZip -Force
 }
 
 if (Test-Path $FinalUpload) {
-    Remove-Item `
-        $FinalUpload `
-        -Force
+    Remove-Item $FinalUpload -Force
 }
 
 New-Item `
@@ -534,26 +516,21 @@ Copy-Item `
     -Force
 
 # ------------------------------------------------------------
-# Create .appxsym
-#
-# Microsoft defines .appxsym as a compressed PDB containing
-# public symbols for Partner Center crash analytics.
-# Compress to .zip first, then rename to .appxsym.
+# Create .appxsym from public PDB
 # ------------------------------------------------------------
 
-$PdbPath = Join-Path `
-    $PublishRoot `
-    "LuckyDangle.pdb"
+$PdbPath = `
+    Join-Path $PublishRoot "LuckyDangle.pdb"
 
 if (Test-Path $PdbPath) {
 
     Write-Host "Public symbol source found."
 
-    $SymbolsTempDir = Join-Path `
-        $OutputDir `
-        "_symbols_temp"
+    $SymbolsTempDir = `
+        Join-Path $OutputDir "_symbols_temp"
 
     if (Test-Path $SymbolsTempDir) {
+
         Remove-Item `
             $SymbolsTempDir `
             -Recurse `
@@ -571,13 +548,11 @@ if (Test-Path $PdbPath) {
         $SymbolsTempDir `
         -Force
 
-    $SymbolsZip = Join-Path `
-        $OutputDir `
-        "LuckyDangle.appxsym.zip"
+    $SymbolsZip = `
+        Join-Path $OutputDir "LuckyDangle.appxsym.zip"
 
-    $AppxSymPath = Join-Path `
-        $TempUploadDir `
-        "LuckyDangle.appxsym"
+    $AppxSymPath = `
+        Join-Path $TempUploadDir "LuckyDangle.appxsym"
 
     if (Test-Path $SymbolsZip) {
         Remove-Item $SymbolsZip -Force
@@ -587,14 +562,11 @@ if (Test-Path $PdbPath) {
         Remove-Item $AppxSymPath -Force
     }
 
-    # Compress using .zip extension because Compress-Archive
-    # only accepts .zip output.
     Compress-Archive `
         -Path (Join-Path $SymbolsTempDir "*") `
         -DestinationPath $SymbolsZip `
         -CompressionLevel Optimal
 
-    # Rename the completed ZIP archive to .appxsym.
     Move-Item `
         $SymbolsZip `
         $AppxSymPath `
@@ -616,7 +588,7 @@ else {
 }
 
 # ------------------------------------------------------------
-# Create outer MSIXUPLOAD ZIP
+# Create outer MSIXUPLOAD archive
 # ------------------------------------------------------------
 
 Write-Host "Creating upload archive..."
@@ -631,7 +603,7 @@ if (-not (Test-Path $UploadZip)) {
 }
 
 # ------------------------------------------------------------
-# Rename .zip → .msixupload
+# Rename ZIP -> MSIXUPLOAD
 # ------------------------------------------------------------
 
 Move-Item `
@@ -649,11 +621,47 @@ Remove-Item `
     -Force
 
 # ============================================================
-# Final output
+# FINAL PACKAGE VERIFICATION
 # ============================================================
 
 $MsixInfo = Get-Item $OutputMsix
 $UploadInfo = Get-Item $FinalUpload
+
+if (-not (Test-Path $FinalUpload)) {
+    throw "Final MSIXUPLOAD was not created."
+}
+
+# ============================================================
+# ONLY NOW update source manifest version
+#
+# This prevents the source version from being advanced if
+# packaging fails.
+# ============================================================
+
+[xml]$finalSourceManifestXml = `
+    Get-Content $SourceManifest -Raw
+
+$finalSourceIdentity = `
+    $finalSourceManifestXml.Package.Identity
+
+if ($null -eq $finalSourceIdentity) {
+    throw "Could not reopen source manifest for version update."
+}
+
+if ($finalSourceIdentity.Version -ne $currentVersion.ToString()) {
+    throw "Source manifest changed unexpectedly during packaging."
+}
+
+$finalSourceIdentity.Version = `
+    $newVersion.ToString()
+
+$finalSourceManifestXml.Save(
+    $SourceManifest
+)
+
+# ============================================================
+# FINAL OUTPUT
+# ============================================================
 
 Write-Host ""
 Write-Host "================================================" `
@@ -666,10 +674,13 @@ Write-Host "================================================" `
     -ForegroundColor Green
 
 Write-Host ""
+Write-Host "Previous version : $currentVersion"
+Write-Host "New version      : $newVersion"
+Write-Host ""
+
 Write-Host "Store name       : Lucky Dangle"
 Write-Host "Package identity : $StorePackageName"
 Write-Host "Publisher        : $StorePublisher"
-Write-Host "Version          : $currentVersion"
 Write-Host ""
 
 Write-Host "MSIX:"
@@ -684,11 +695,17 @@ Write-Host "  $($UploadInfo.Length) bytes"
 
 Write-Host ""
 
+Write-Host "Source manifest updated to:"
+Write-Host "  Version = $newVersion"
+
+Write-Host ""
+
 Write-Host "IMPORTANT:" `
     -ForegroundColor Yellow
 
 Write-Host "Upload the .msixupload file to Partner Center."
 Write-Host "Do NOT upload the local development MSIX."
+
 Write-Host ""
 
 Write-Host "================================================" `
