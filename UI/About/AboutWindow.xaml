@@ -18,14 +18,14 @@
             <!-- LOGO -->
             <!-- ================================================= -->
 
-            <Image Source="/LuckyDangle;component/Assets/LuckyDangle.png"
-                   Width="88"
-                   Height="88"
-                   Stretch="Uniform"
-                   HorizontalAlignment="Center"
-                   SnapsToDevicePixels="True"
-                   UseLayoutRounding="True"
-                   Margin="0,0,0,2"/>
+            <Image x:Name="AboutLogo"
+                Width="88"
+                Height="88"
+                Stretch="Uniform"
+                HorizontalAlignment="Center"
+                SnapsToDevicePixels="True"
+                UseLayoutRounding="True"
+                Margin="0,0,0,2"/>
 
 
             <!-- ================================================= -->

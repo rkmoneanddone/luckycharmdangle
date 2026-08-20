@@ -456,6 +456,25 @@
         <Separator/>
 
 
+        <!-- SHARE -->
+
+        <!-- SHARE -->
+
+        <MenuItem Header="Share This"
+                Click="ShareDangle_Click">
+
+            <MenuItem.Icon>
+
+                <TextBlock Text="↗"
+                        FontSize="17"
+                        Foreground="#2E8B57"/>
+
+            </MenuItem.Icon>
+
+        </MenuItem>
+
+        <Separator/>
+
         <!-- EXIT -->
 
         <MenuItem Header="Exit"

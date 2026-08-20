@@ -1,5 +1,8 @@
+using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using LuckyDangle.UI.Support;
 
 namespace LuckyDangle.UI.About;
@@ -9,12 +12,19 @@ public partial class AboutWindow : Window
     public AboutWindow()
     {
         InitializeComponent();
+
+        string imagePath =
+            Path.Combine(
+                AppContext.BaseDirectory,
+                "Assets",
+                "LuckyDangle.png");
+
+        AboutLogo.Source =
+            new BitmapImage(
+                new Uri(
+                    imagePath,
+                    UriKind.Absolute));
     }
-
-
-    // =====================================================
-    // CLOSE
-    // =====================================================
 
     private void Close_Click(
         object sender,
@@ -22,11 +32,6 @@ public partial class AboutWindow : Window
     {
         Close();
     }
-
-
-    // =====================================================
-    // SUPPORT LUCKYCHARM
-    // =====================================================
 
     private void SupportLuckyCharm_Click(
         object sender,
@@ -42,11 +47,6 @@ public partial class AboutWindow : Window
 
         supportWindow.ShowDialog();
     }
-
-
-    // =====================================================
-    // DRAG WINDOW
-    // =====================================================
 
     private void AboutWindow_MouseLeftButtonDown(
         object sender,

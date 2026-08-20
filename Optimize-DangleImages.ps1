@@ -22,7 +22,7 @@ $ErrorActionPreference = "Stop"
 #   ImageMagick ("magick" command)
 # ============================================================
 
-$DangleFolder = "E:\projects\LuckyDangle\Assets\Dangles"
+$DangleFolder = "F:\projects\LuckyDangle\Assets\Share"
 
 $MaxBytes = 250KB
 

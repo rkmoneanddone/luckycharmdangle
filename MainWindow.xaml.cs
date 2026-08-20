@@ -3,14 +3,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using System.Linq;
 using System.IO;
 using System.Text.Json;
 using LuckyDangle.UI.About;
 using LuckyDangle.UI.Support;
-
+using LuckyDangle.Services;
 using LuckyDangle.Dangles;
 
 namespace LuckyDangle;
@@ -492,6 +489,19 @@ public partial class MainWindow : Window
             };
 
         supportWindow.ShowDialog();
+    }
+
+
+    // =====================================================
+    // SHARE CURRENT DANGLER
+    // =====================================================
+
+    private void ShareDangle_Click(
+    object sender,
+    RoutedEventArgs e)
+    {
+        SharingService.ShareDangle(
+            currentDangle);
     }
 
     // =====================================================

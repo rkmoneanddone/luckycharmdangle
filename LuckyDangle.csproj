@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -12,37 +12,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Dangles\maneki_neko.png" />
-    <Resource Include="Assets\Dangles\rakhi_divine.png" />
-    <Resource Include="Assets\Dangles\rakhi_kundan_heart.png" />
-    <Resource Include="Assets\Dangles\rakhi_royal_peacock.png" />
-     <Resource Include="Assets\Dangles\rakhi_lotus_grace.png" />
-     <Resource Include="Assets\Dangles\rakhi_shree_ganesha.png" />
-     <Resource Include="Assets\Dangles\rakhi_lucky_elephant.png" />
-     <Resource Include="Assets\Dangles\jet_stone_higuerilla.png" />
-     <Resource Include="Assets\Dangles\rakhi_nimbu_mirchi.png" />
-     <Resource Include="Assets\Dangles\bhai_mere_hero_rakhi.png" />
-     <Resource Include="Assets\Dangles\lucky_coin.png" />
-     <Resource Include="Assets\Dangles\nazar_guardian.png" />
-     <Resource Include="Assets\Dangles\hamsa_khamsa.png" />
-     <Resource Include="Assets\Dangles\rakhi_evil_eye.png" />
-     <Resource Include="Assets\Dangles\cornicello.png" />
+
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.4.0" />
+
+    <!-- All dangle artwork -->
+    <Content Include="Assets\Dangles\**\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
     <Resource Include="Assets\LuckyDangle.ico" />
-    <Resource Include="Assets\LuckyDangle.png" />
-    <Resource Include="Assets\Dangles\rakhi_bhai_prem.png" />
-    <Resource Include="Assets\Dangles\rakhi_bhabhi_prem.png" />
-    <Resource Include="Assets\Dangles\rakhi_behen_ka_pyaar.png" />
-    <Resource Include="Assets\Dangles\spiritual_om.png" />
-    <Resource Include="Assets\Dangles\spiritual_shree_yantra.png" />
-    <Resource Include="Assets\Dangles\spiritual_trishul.png" />
-    <Resource Include="Assets\Dangles\spiritual_lotus_padma.png" />
-    <Resource Include="Assets\Dangles\spiritual_krishna.png" />
-    <Resource Include="Assets\Dangles\spiritual_ganesha.png" />
-    <Resource Include="Assets\Dangles\spiritual_lakshmi.png" />
+    <Content Include="Assets\LuckyDangle.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+
+    <!-- LuckyCharm Share Images -->
+    <Resource Include="Assets\Share\lucky_charms_share.png" />
+    <Resource Include="Assets\Share\rakhi_share.png" />
+    <Resource Include="Assets\Share\spiritual_share.png" />
+
     <!-- LuckyCharm Support -->
     <Resource Include="Assets\Support\lucky_charm_upi_qr.jpg" />
-    <PackageReference Include="QRCoder"
-                  Version="1.8.0" />
+
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+
   </ItemGroup>
 
 </Project>
