@@ -17,8 +17,11 @@ public abstract class ImageDangleBase : IDangle
     public abstract string Category { get; }
 
     public abstract string Collection { get; }
-
     public abstract bool IsPremium { get; }
+
+    // Backward compatibility: every previously shipped dangle stays usable
+    // unless a NEW dangle class explicitly overrides this property.
+    public virtual bool RequiresPremiumAccess => false;
 
     public abstract bool IsSeasonal { get; }
 

@@ -21,9 +21,14 @@ public interface IDangle
     // Collection / family.
     // Example: "Rakhi", "Lucky Charms", "Lotus"
     string Collection { get; }
-
-    // Commercial status of THIS design.
+    // Commercial / presentation status of THIS design.
+    // Existing shipped dangles may be marked Premium but remain usable.
     bool IsPremium { get; }
+
+    // Actual access-control flag.
+    // Existing shipped dangles default to false via ImageDangleBase.
+    // New paid-only dangles/collections explicitly override this to true.
+    bool RequiresPremiumAccess { get; }
 
     // Useful for things such as Rakhi, Diwali, Christmas etc.
     bool IsSeasonal { get; }

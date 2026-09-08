@@ -14,6 +14,11 @@ public abstract class RakhiDangleBase : IDangle
     public abstract string Category { get; }
     public abstract string Collection { get; }
     public abstract bool IsPremium { get; }
+
+    // Existing Rakhi dangles remain usable unless a future paid-only
+    // Rakhi explicitly overrides this property.
+    public virtual bool RequiresPremiumAccess => false;
+
     public abstract bool IsSeasonal { get; }
 
     public virtual double HangPointX => 45;

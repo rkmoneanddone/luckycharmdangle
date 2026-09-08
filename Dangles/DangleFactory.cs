@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+
+using LuckyDangle.Services;
 namespace LuckyDangle.Dangles;
 
 public static class DangleFactory
@@ -8,7 +10,7 @@ public static class DangleFactory
     public static IReadOnlyList<IDangle>
         GetAvailableDangles()
     {
-        return DangleCatalog.GetAll();
+        return DangleAccessService.GetUsableDangles();
     }
 
 
@@ -16,7 +18,7 @@ public static class DangleFactory
         GetRandomDangle()
     {
         var dangles =
-            DangleCatalog.GetAll();
+            DangleAccessService.GetUsableDangles();
 
         if (dangles.Count == 0)
             return null;

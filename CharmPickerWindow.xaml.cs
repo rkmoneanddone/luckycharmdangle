@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using LuckyDangle.Dangles;
+
+using LuckyDangle.Services;
 using System.Windows.Media.Imaging;
 
 namespace LuckyDangle;
@@ -890,6 +892,10 @@ public partial class CharmPickerWindow : Window
         bool premium =
             dangle.IsPremium;
 
+        bool locked =
+            dangle.RequiresPremiumAccess &&
+            !DangleAccessService.CanUse(dangle);
+
 
         // =====================================================
         // CARD
@@ -1089,9 +1095,11 @@ public partial class CharmPickerWindow : Window
 
         badges.Children.Add(
             CreateBadge(
-                premium
-                    ? "✦ Premium"
-                    : "Free",
+                locked
+                    ? "🔒 Premium"
+                    : premium
+                        ? "✦ Premium"
+                        : "Free",
                 premium
                     ? "#F3C75B"
                     : "#9FD4FF",
@@ -1307,6 +1315,13 @@ public partial class CharmPickerWindow : Window
     IDangle dangle,
     Border selectedCard)
     {
+        if (!DangleAccessService.CanUse(dangle))
+        {
+            new PremiumUpsellWindow { Owner = this }.ShowDialog();
+
+            return;
+        }
+
         selectedDangle =
             dangle;
 
@@ -1437,6 +1452,17 @@ public partial class CharmPickerWindow : Window
             selectedDangle =
                 currentDangle;
 
+        if (!DangleAccessService.CanUse(selectedDangle))
+        {
+            MessageBox.Show(
+                this,
+                "This dangle requires an active Premium entitlement.",
+                "Lucky Dangle Premium",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+            return;
+        }
 
         DialogResult =
             true;
@@ -1459,6 +1485,18 @@ public partial class CharmPickerWindow : Window
     // =========================================================
     // BRUSH HELPER
     // =========================================================
+
+    private void PremiumAccessButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var premium = new PremiumUpsellWindow
+        {
+            Owner = this
+        };
+
+        premium.ShowDialog();
+    }
 
     private static SolidColorBrush Brush(
         string hex)

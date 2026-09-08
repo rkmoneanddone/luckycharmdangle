@@ -579,8 +579,11 @@ public partial class MainWindow : Window
                                 .FirstOrDefault(
                                     d => d.Id == position.DangleId);
 
-                        if (savedDangle != null)
+                        if (savedDangle != null &&
+                            DangleAccessService.CanUse(savedDangle))
+                        {
                             currentDangle = savedDangle;
+                        }
                     }
 
                     KeepWindowOnScreen();

@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Lucky Dangle uses server-side Cloud Functions for all payment,
+    // support and entitlement reads/writes.
+    //
+    // The Windows desktop client must never write payment status or
+    // premium entitlement data directly.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

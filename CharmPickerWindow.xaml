@@ -482,7 +482,44 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
 
-                    <!-- BUY COFFEE -->
+                                        <Button x:Name="PremiumAccessButton"
+                            Click="PremiumAccessButton_Click"
+                            Height="38"
+                            Margin="0,0,10,0"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#2B2110"
+                                        BorderBrush="#D6A62B"
+                                        BorderThickness="1"
+                                        CornerRadius="18"
+                                        Padding="14,6">
+                                    <StackPanel Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="PREMIUM"
+                                                   Foreground="#F2C84B"
+                                                   FontWeight="Bold"
+                                                   FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                        <Border Background="#D6A62B"
+                                                CornerRadius="8"
+                                                Margin="8,0,0,0"
+                                                Padding="7,2">
+                                            <TextBlock x:Name="PremiumBadgeText"
+                                                       Text="ACTIVE"
+                                                       Foreground="#172033"
+                                                       FontWeight="Bold"
+                                                       FontSize="10"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+<!-- BUY COFFEE -->
 
                     <Button x:Name="BuyCoffeeButton"
                             Content="☕  Buy Rohit a Coffee"
