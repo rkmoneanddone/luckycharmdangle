@@ -103,7 +103,7 @@
               <TextBlock x:Name="CurrencyText" Text="&#x20B9;" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFD36A" FontSize="18" FontWeight="Bold" />
             </Border>
             <TextBox x:Name="AmountTextBox"
-                             TextChanged="AmountTextBox_TextChanged" Grid.Column="1" Height="42" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
+                             TextChanged="AmountTextBox_TextChanged" PreviewTextInput="AmountTextBox_PreviewTextInput" Grid.Column="1" Height="42" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
           </Grid>
           <TextBlock x:Name="AmountHintText" Text="Minimum &#x20B9;199. You may contribute more if you wish." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
           <TextBlock Text="Email" Margin="2,11,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />

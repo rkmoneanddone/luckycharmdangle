@@ -521,20 +521,40 @@
                     </Button>
 <!-- BUY COFFEE -->
 
-                    <Button x:Name="BuyCoffeeButton"
-                            Content="☕  Buy Rohit a Coffee"
-                            Width="165"
-                            Height="34"
+                                        <Button x:Name="BuyCoffeeButton"
+                            Width="178"
+                            Height="38"
                             Margin="0,0,12,0"
+                            Padding="0"
                             Background="Transparent"
-                            Foreground="#8A641C"
                             BorderThickness="0"
-                            FontFamily="Georgia"
-                            FontStyle="Italic"
-                            FontWeight="SemiBold"
-                            FontSize="13"
                             Cursor="Hand"
-                            Click="BuyCoffeeButton_Click"/>
+                            Click="BuyCoffeeButton_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#FFF8E6"
+                                        BorderBrush="#C99A2E"
+                                        BorderThickness="1"
+                                        CornerRadius="18"
+                                        Padding="13,6">
+                                    <StackPanel Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="☕"
+                                                   FontSize="14"
+                                                   Margin="0,0,7,0"
+                                                   VerticalAlignment="Center"/>
+                                        <TextBlock Text="Buy Rohit a Coffee"
+                                                   Foreground="#7A5510"
+                                                   FontFamily="Georgia"
+                                                   FontStyle="Italic"
+                                                   FontWeight="SemiBold"
+                                                   FontSize="13"
+                                                   VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
 
                     <!-- CANCEL -->

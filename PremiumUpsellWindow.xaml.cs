@@ -13,6 +13,7 @@ public partial class PremiumUpsellWindow : Window
     private readonly Dictionary<Window, bool> previousTopmost = new();
     private readonly Dictionary<Window, WindowState> previousWindowStates = new();
     private bool browserModeActive;
+    private bool normalizingAmountText;
 
     public PremiumUpsellWindow()
     {
@@ -132,12 +133,49 @@ private void ApplyMarketPricing()
     {
         try
         {
-            var parsed = new MailAddress(email);
+            var value = email.Trim();
+            var parsed = new MailAddress(value);
 
-            return string.Equals(
-                parsed.Address,
-                email.Trim(),
-                StringComparison.OrdinalIgnoreCase);
+            if (!string.Equals(
+                    parsed.Address,
+                    value,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var at = value.LastIndexOf('@');
+            if (at <= 0 || at >= value.Length - 1)
+                return false;
+
+            var domain = value[(at + 1)..];
+
+            if (domain.Length > 253 ||
+                domain.StartsWith('.') ||
+                domain.EndsWith('.') ||
+                domain.StartsWith('-') ||
+                domain.EndsWith('-') ||
+                !domain.Contains('.'))
+            {
+                return false;
+            }
+
+            var labels = domain.Split('.');
+
+            if (labels.Any(label =>
+                    string.IsNullOrWhiteSpace(label) ||
+                    label.StartsWith('-') ||
+                    label.EndsWith('-') ||
+                    label.Any(ch =>
+                        !(char.IsLetterOrDigit(ch) || ch == '-'))))
+            {
+                return false;
+            }
+
+            var tld = labels[^1];
+
+            return tld.Length >= 2 &&
+                   tld.All(char.IsLetter);
         }
         catch
         {
@@ -145,42 +183,82 @@ private void ApplyMarketPricing()
         }
     }
 
+    private void AmountTextBox_PreviewTextInput(
+        object sender,
+        System.Windows.Input.TextCompositionEventArgs e)
+    {
+        e.Handled =
+            string.IsNullOrEmpty(e.Text) ||
+            !e.Text.All(char.IsDigit);
+    }
+
     private void AmountTextBox_TextChanged(
         object sender,
         System.Windows.Controls.TextChangedEventArgs e)
     {
-        if (!IsLoaded)
+        if (!IsLoaded || normalizingAmountText)
             return;
 
-        var raw =
-            AmountTextBox.Text.Trim()
-                .Replace(",", "");
+        normalizingAmountText = true;
 
-        if (!decimal.TryParse(
-                raw,
-                NumberStyles.Number,
-                CultureInfo.InvariantCulture,
-                out var amount))
+        try
         {
-            return;
+            var original = AmountTextBox.Text;
+
+            // Paste-safe: remove anything that is not a digit.
+            var digits =
+                new string(
+                    original
+                        .Where(char.IsDigit)
+                        .ToArray());
+
+            if (digits != original)
+            {
+                AmountTextBox.Text = digits;
+                AmountTextBox.CaretIndex =
+                    AmountTextBox.Text.Length;
+            }
+
+            if (string.IsNullOrWhiteSpace(digits))
+                return;
+
+            if (!decimal.TryParse(
+                    digits,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var amount))
+            {
+                AmountTextBox.Text =
+                    MaximumAmount.ToString(
+                        "0",
+                        CultureInfo.InvariantCulture);
+
+                AmountTextBox.CaretIndex =
+                    AmountTextBox.Text.Length;
+                return;
+            }
+
+            if (amount <= MaximumAmount)
+                return;
+
+            AmountTextBox.Text =
+                MaximumAmount.ToString(
+                    "0",
+                    CultureInfo.InvariantCulture);
+
+            AmountTextBox.CaretIndex =
+                AmountTextBox.Text.Length;
+
+            SetStatus(
+                IsIndia
+                    ? $"Maximum amount is \u20B9{MaximumAmount:0}."
+                    : $"Maximum amount is ${MaximumAmount:0}.",
+                true);
         }
-
-        if (amount <= MaximumAmount)
-            return;
-
-        AmountTextBox.Text =
-            MaximumAmount.ToString(
-                "0.##",
-                CultureInfo.InvariantCulture);
-
-        AmountTextBox.CaretIndex =
-            AmountTextBox.Text.Length;
-
-        SetStatus(
-            IsIndia
-                ? $"Maximum amount is \u20B9{MaximumAmount:0}."
-                : $"Maximum amount is ${MaximumAmount:0}.",
-            true);
+        finally
+        {
+            normalizingAmountText = false;
+        }
     }
     private bool TryReadAmount(out decimal amount)
     {
@@ -192,7 +270,7 @@ private void ApplyMarketPricing()
 
         if (!decimal.TryParse(
                 raw,
-                NumberStyles.Number,
+                NumberStyles.None,
                 CultureInfo.InvariantCulture,
                 out amount))
         {
@@ -278,7 +356,7 @@ private void ApplyMarketPricing()
                 checkout.CheckoutUrl);
 
             SetStatus(
-                "Complete payment in Razorpay. " +
+                "Complete payment securely in your browser. " +
                 "Lucky Dangle will detect it automatically.");
 
             for (var attempt = 0; attempt < 160; attempt++)

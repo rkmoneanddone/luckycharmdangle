@@ -60,6 +60,7 @@ public static class PremiumPurchaseService
         {
             email = email.Trim(),
             plan,
+            amount,
             market = GetMarketCode()
         };
 

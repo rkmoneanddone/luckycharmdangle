@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace LuckyDangle.Dangles;
 
@@ -14,7 +16,7 @@ public static class DangleCatalog
     // will use this automatically.
     // =====================================================
 
-    private static readonly List<IDangle> AllDangles =
+    private static readonly List<IDangle> BuiltInDangles =
     new()
     {
         // =================================================
@@ -57,6 +59,39 @@ public static class DangleCatalog
         new CornicelloDangle(),
         new JetStoneHiguerillaDangle(),
     };
+
+    private static readonly List<IDangle> AllDangles =
+        BuildCatalog();
+
+    private static List<IDangle> BuildCatalog()
+    {
+        var result =
+            new List<IDangle>(BuiltInDangles);
+
+        var knownTypes =
+            BuiltInDangles
+                .Select(d => d.GetType())
+                .ToHashSet();
+
+        var discovered =
+            typeof(IDangle)
+                .Assembly
+                .GetTypes()
+                .Where(type =>
+                    !type.IsAbstract &&
+                    !type.IsInterface &&
+                    typeof(IDangle).IsAssignableFrom(type) &&
+                    type.GetConstructor(Type.EmptyTypes) is not null &&
+                    !knownTypes.Contains(type))
+                .Select(type =>
+                    (IDangle)Activator.CreateInstance(type)!)
+                .OrderBy(d => d.Collection)
+                .ThenBy(d => d.Name)
+                .ToList();
+
+        result.AddRange(discovered);
+        return result;
+    }
 
     public static IReadOnlyList<IDangle> GetAll() => AllDangles;
 

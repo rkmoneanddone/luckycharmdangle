@@ -19,9 +19,23 @@ const RAZORPAY_KEY_SECRET = defineSecret("RAZORPAY_KEY_SECRET");
 type PremiumPlan = "premium_6m" | "premium_12m";
 
 const PRICES = {
-  premium_6m: { minimumInr: 19900, months: 6 },
-  premium_12m: { minimumInr: 29900, months: 12 },
+  premium_6m: { minimumInr: 19900, minimumUsd: 600, months: 6 },
+  premium_12m: { minimumInr: 29900, minimumUsd: 900, months: 12 },
 } as const;
+
+const MAX_INR_PAISE = 1999900;
+const MAX_USD_CENTS = 20000;
+
+const PAYMENT_ENVIRONMENT =
+  String(process.env.PAYMENT_ENVIRONMENT ?? "test")
+    .trim()
+    .toLowerCase() === "live"
+    ? "live"
+    : "test";
+
+function providerForMarket(market: string): "razorpay" | "dodo" {
+  return market === "IN" ? "razorpay" : "dodo";
+}
 
 function setCors(res: any) {
   res.set("Access-Control-Allow-Origin", "*");
@@ -131,6 +145,7 @@ async function grantEntitlement(
         status: "active",
         plan,
         provider: "razorpay",
+        environment: PAYMENT_ENVIRONMENT,
         paymentId,
         purchasedAt: Timestamp.fromDate(now),
         expiresAt: Timestamp.fromDate(expiresAt),
@@ -143,6 +158,7 @@ async function grantEntitlement(
     tx.set(paymentRef, {
       type: "premium",
       provider: "razorpay",
+      environment: PAYMENT_ENVIRONMENT,
       paymentId,
       checkoutId,
       email,
@@ -266,7 +282,7 @@ export const createPremiumCheckout = onRequest(
         return;
       }
 
-      if (requestedAmountPaise > 1999900) {
+      if (requestedAmountPaise > MAX_INR_PAISE) {
         res.status(400).json({
           error: "Contribution amount cannot exceed INR 19,999.",
         });
@@ -291,7 +307,8 @@ export const createPremiumCheckout = onRequest(
         emailHash: emailHash(email),
         plan,
         market: "IN",
-        provider: "razorpay",
+        provider: providerForMarket("IN"),
+        environment: PAYMENT_ENVIRONMENT,
         status: "created",
         amount: requestedAmountPaise,
         currency: "INR",
