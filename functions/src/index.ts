@@ -11,3 +11,5 @@ export const health = onRequest(
 );
 
 export * from "./premium";
+export * from "./restoreOtp";
+export * from "./support";

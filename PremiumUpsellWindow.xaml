@@ -113,7 +113,13 @@
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
             <TextBlock Text="Already purchased?" Foreground="#8F96A6" VerticalAlignment="Center" FontSize="12" />
             <Button Content="Have a license?" Margin="3,0,0,0" Style="{StaticResource LinkButton}" Click="Restore_Click" />
-          </StackPanel>
+          </StackPanel>          <TextBlock Text="Refund Policy: Premium payments are generally non-refundable. Please verify your plan, email and amount before paying."
+                     Margin="8,8,8,0"
+                     TextWrapping="Wrap"
+                     TextAlignment="Center"
+                     Foreground="#C9A85A"
+                     FontSize="10.5"
+                     FontWeight="SemiBold" />
         </StackPanel>
         <!-- Clean post-payment state -->
         <StackPanel x:Name="SuccessPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Stretch">
@@ -131,8 +137,12 @@
           <TextBlock Text="Use the email connected to your purchase." Margin="0,4,0,15" HorizontalAlignment="Center" Foreground="#AEB4C3" FontSize="12.5" />
           <TextBlock Text="Email" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
           <TextBox x:Name="RestoreEmailTextBox" Height="42" Margin="0,4,0,0" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
-          <TextBlock x:Name="RestoreInfoText" Margin="0,8,0,0" Text="Email ownership verification will be required before Live release." TextWrapping="Wrap" Foreground="#8F96A6" FontSize="11.5" />
-          <Button Content="Back to Purchase" Margin="0,14,0,0" Style="{StaticResource PrimaryButton}" Click="BackToPurchase_Click" />
+          <Button x:Name="SendRestoreCodeButton" Content="Send Verification Code" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="SendRestoreCode_Click" />
+          <TextBlock Text="6-digit verification code" Margin="0,12,0,0" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
+          <TextBox x:Name="RestoreCodeTextBox" Height="42" Margin="0,4,0,0" Padding="10,8" FontSize="16" MaxLength="6" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
+          <TextBlock x:Name="RestoreInfoText" Margin="0,8,0,0" Text="" TextWrapping="Wrap" Foreground="#8F96A6" FontSize="11.5" />
+          <Button x:Name="VerifyRestoreButton" Content="Verify &amp; Restore" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="VerifyRestore_Click" />
+          <Button Content="Back to Purchase" Margin="0,10,0,0" Style="{StaticResource LinkButton}" Click="BackToPurchase_Click" />
         </StackPanel>
       </Grid>
     </Grid>

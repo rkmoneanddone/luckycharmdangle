@@ -3,6 +3,7 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
+import { SMTP_PASSWORD, sendPremiumActivatedEmail } from "./email";
 
 if (getApps().length === 0) {
   initializeApp();
@@ -54,6 +55,9 @@ function emailHash(email: string): string {
     .digest("hex");
 }
 
+function entitlementDocId(email: string): string {
+  return `${PAYMENT_ENVIRONMENT}_${emailHash(email)}`;
+}
 function codeHash(code: string): string {
   return crypto
     .createHash("sha256")
@@ -89,7 +93,7 @@ async function grantEntitlement(
     db.collection("premiumCheckouts").doc(checkoutId);
 
   const paymentRef =
-    db.collection("payments").doc(`razorpay_${paymentId}`);
+    db.collection("payments").doc(`${PAYMENT_ENVIRONMENT}_razorpay_${paymentId}`);
 
   return db.runTransaction(async (tx) => {
     const checkoutSnap = await tx.get(checkoutRef);
@@ -104,7 +108,7 @@ async function grantEntitlement(
     const eHash = emailHash(email);
 
     const entitlementRef =
-      db.collection("premiumEntitlements").doc(eHash);
+      db.collection("premiumEntitlements").doc(entitlementDocId(email));
 
     const priorPayment = await tx.get(paymentRef);
     const currentEntitlement = await tx.get(entitlementRef);
@@ -277,7 +281,7 @@ export const createPremiumCheckout = onRequest(
       ) {
         res.status(400).json({
           error:
-            `Amount must be at least â‚¹${PRICES[plan].minimumInr / 100}.`,
+            `Amount must be at least INR ${PRICES[plan].minimumInr / 100}.`,
         });
         return;
       }
@@ -403,7 +407,7 @@ font-weight:700;font-size:16px;cursor:pointer}
 <div class="card">
 <h1>Lucky Dangle Premium</h1>
 <div class="muted">Unlock all Premium Collections</div>
-<div class="price">Ã¢â€šÂ¹${amount / 100}</div>
+<div class="price">&#8377;${amount / 100}</div>
 <button id="pay">Pay securely</button>
 <p class="muted" id="status"></p>
 </div>
@@ -427,7 +431,7 @@ const options = {
   },
   handler: async function (r) {
     document.getElementById("status").textContent =
-      "Verifying paymentÃ¢â‚¬Â¦";
+      "Verifying payment...";
 
     const response = await fetch(
       ${JSON.stringify(`${BASE_URL}/razorpayVerify`)},
@@ -449,7 +453,7 @@ const options = {
 
     if (response.ok) {
       document.querySelector(".card").innerHTML =
-        "<h1>Payment successful Ã¢Å“â€œ</h1>" +
+        "<h1>Payment successful &#10003;</h1>" +
         "<p class='muted'>Premium is being unlocked in Lucky Dangle. " +
         "You can return to the app.</p>";
     } else {
@@ -480,7 +484,7 @@ setTimeout(() => rzp.open(), 350);
 export const razorpayVerify = onRequest(
   {
     region: REGION,
-    secrets: [RAZORPAY_KEY_SECRET],
+    secrets: [RAZORPAY_KEY_SECRET, SMTP_PASSWORD],
   },
   async (req, res) => {
     setCors(res);
@@ -557,6 +561,22 @@ export const razorpayVerify = onRequest(
           checkoutId,
           paymentId,
         );
+
+      try {
+        await sendPremiumActivatedEmail({
+          email: entitlement.email,
+          plan: String(checkout.plan ?? ""),
+          amountMinor: Number(checkout.amount ?? 0),
+          currency: String(checkout.currency ?? "INR"),
+          paymentId,
+          expiresAt: entitlement.expiresAt,
+        });
+      } catch (mailError) {
+        console.error(
+          "Premium confirmation email failed",
+          mailError,
+        );
+      }
 
       res.json({
         ok: true,

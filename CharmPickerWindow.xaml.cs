@@ -1438,7 +1438,7 @@ public partial class CharmPickerWindow : Window
                 Owner = this
             };
 
-        window.ShowDialog();
+        window.Show();
     }
 
 

@@ -114,6 +114,63 @@ public static class PremiumPurchaseService
                ?? new PremiumStatusResponse();
     }
 
+    public static async Task SendRestoreOtpAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            email = email.Trim()
+        };
+
+        using var response = await Http.PostAsJsonAsync(
+            $"{BackendBaseUrl}/sendRestoreOtp",
+            body,
+            cancellationToken);
+
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                ExtractError(
+                    raw,
+                    "Unable to send verification code."));
+    }
+
+    public static async Task<PremiumStatusResponse>
+        VerifyRestoreOtpAsync(
+            string email,
+            string code,
+            CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            email = email.Trim(),
+            code = code.Trim()
+        };
+
+        using var response = await Http.PostAsJsonAsync(
+            $"{BackendBaseUrl}/verifyRestoreOtp",
+            body,
+            cancellationToken);
+
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                ExtractError(
+                    raw,
+                    "Premium could not be restored."));
+
+        return JsonSerializer.Deserialize<PremiumStatusResponse>(
+                   raw,
+                   JsonOptions())
+               ?? new PremiumStatusResponse();
+    }
     public static async Task<PremiumStatusResponse> RestoreAsync(
         string email,
         string restoreCode,

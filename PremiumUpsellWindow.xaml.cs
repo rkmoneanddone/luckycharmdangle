@@ -459,6 +459,96 @@ private void ApplyMarketPricing()
         Height = 400;
     }
 
+    private async void SendRestoreCode_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var email = RestoreEmailTextBox.Text.Trim();
+
+        if (!IsValidEmail(email))
+        {
+            RestoreInfoText.Text =
+                "Please enter a valid email address.";
+            return;
+        }
+
+        try
+        {
+            SendRestoreCodeButton.IsEnabled = false;
+            RestoreInfoText.Text =
+                "Sending verification code...";
+
+            await PremiumPurchaseService.SendRestoreOtpAsync(
+                email);
+
+            RestoreInfoText.Text =
+                "If an active Premium purchase exists for this email, " +
+                "a 6-digit code has been sent. " +
+                "The code is valid for 10 minutes.";
+        }
+        catch (Exception ex)
+        {
+            RestoreInfoText.Text = ex.Message;
+        }
+        finally
+        {
+            SendRestoreCodeButton.IsEnabled = true;
+        }
+    }
+
+    private async void VerifyRestore_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var email = RestoreEmailTextBox.Text.Trim();
+        var code = RestoreCodeTextBox.Text.Trim();
+
+        if (!IsValidEmail(email))
+        {
+            RestoreInfoText.Text =
+                "Please enter a valid email address.";
+            return;
+        }
+
+        if (code.Length != 6 ||
+            !code.All(char.IsDigit))
+        {
+            RestoreInfoText.Text =
+                "Enter the 6-digit verification code.";
+            return;
+        }
+
+        try
+        {
+            VerifyRestoreButton.IsEnabled = false;
+            RestoreInfoText.Text = "Verifying...";
+
+            var status =
+                await PremiumPurchaseService
+                    .VerifyRestoreOtpAsync(
+                        email,
+                        code);
+
+            if (!status.IsActive ||
+                !status.ExpiresAtUtc.HasValue)
+            {
+                RestoreInfoText.Text =
+                    "No active Premium purchase was found.";
+                return;
+            }
+
+            _premiumWasAlreadyActiveOnOpen = false;
+            ApplySuccessfulEntitlement(status);
+        }
+        catch (Exception ex)
+        {
+            RestoreInfoText.Text = ex.Message;
+        }
+        finally
+        {
+            VerifyRestoreButton.IsEnabled = true;
+        }
+    }
     private void BackToPurchase_Click(
         object sender,
         RoutedEventArgs e)

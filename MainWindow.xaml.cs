@@ -488,7 +488,7 @@ public partial class MainWindow : Window
                     WindowStartupLocation.CenterScreen
             };
 
-        supportWindow.ShowDialog();
+        supportWindow.Show();
     }
 
 

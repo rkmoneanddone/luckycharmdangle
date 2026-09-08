@@ -45,7 +45,7 @@ public partial class AboutWindow : Window
                     WindowStartupLocation.CenterScreen
             };
 
-        supportWindow.ShowDialog();
+        supportWindow.Show();
     }
 
     private void AboutWindow_MouseLeftButtonDown(

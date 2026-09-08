@@ -1,95 +1,276 @@
 using System;
-using System.IO;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net.Mail;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
-using QRCoder;
+using LuckyDangle.Services;
 
 namespace LuckyDangle.UI.Support;
 
 public partial class SupportWindow : Window
 {
-    private const string UpiId =
-        "rohitmallick85@oksbi";
+    private readonly bool _isIndia;
 
-    private const string PayeeName =
-        "Rohit Mallick";
-
-    private const decimal MinimumAmount =
-        100m;
-
-    private decimal selectedAmount =
-        100m;
-
-    private bool updatingAmount;
-
-    private const decimal MaximumAmount = 5000m;
-
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
+    private decimal _minimumAmount;
+    private decimal _maximumAmount;
+    private decimal _selectedAmount;
+    private bool _updatingAmount;
+    private CancellationTokenSource? _paymentPolling;
+    private bool _paymentCompleted;
+    private WindowState? _ownerPreviousState;
 
     public SupportWindow()
     {
         InitializeComponent();
 
-        // The XAML already starts with Text="100".
-        // InitializeComponent() can fire TextChanged before
-        // PayButton exists, so UpdatePayButton() is null-safe.
+        _isIndia =
+            SupportPurchaseService.GetMarketCode() == "IN";
 
-        updatingAmount = true;
+        if (_isIndia)
+        {
+            _minimumAmount = 100m;
+            _maximumAmount = 5000m;
+            _selectedAmount = 100m;
 
-        CustomAmountTextBox.Text = "100";
+            MarketText.Text =
+                "India payment via Razorpay";
 
-        updatingAmount = false;
+            Preset1Button.Content = "INR 100";
+            Preset1Button.Tag = "100";
 
-        selectedAmount = 100m;
+            Preset2Button.Content = "INR 150";
+            Preset2Button.Tag = "150";
+
+            Preset3Button.Content = "INR 200";
+            Preset3Button.Tag = "200";
+
+            AmountHelpText.Text =
+                "Or enter another amount (INR 100 - INR 5,000)";
+
+            CustomAmountTextBox.Text = "100";
+        }
+        else
+        {
+            _minimumAmount = 3m;
+            _maximumAmount = 100m;
+            _selectedAmount = 3m;
+
+            MarketText.Text =
+                "International payment via Dodo";
+
+            Preset1Button.Content = "USD 3";
+            Preset1Button.Tag = "3";
+
+            Preset2Button.Content = "USD 5";
+            Preset2Button.Tag = "5";
+
+            Preset3Button.Content = "USD 10";
+            Preset3Button.Tag = "10";
+
+            AmountHelpText.Text =
+                "Or enter another amount (USD 3 - USD 100)";
+
+            CustomAmountTextBox.Text = "3";
+        }
 
         UpdatePayButton();
+
+        Loaded += SupportWindow_Loaded;
+        Closed += SupportWindow_Closed;
     }
 
+    private async void SupportWindow_Loaded(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var pending =
+            PendingCoffeeCheckoutStore.LoadRecent();
 
-    // =====================================================
-    // PRESET AMOUNT
-    // =====================================================
+        if (
+            pending == null ||
+            string.IsNullOrWhiteSpace(
+                pending.CheckoutId))
+            return;
 
+        EmailTextBox.Text = pending.Email;
+
+        _updatingAmount = true;
+        CustomAmountTextBox.Text =
+            pending.Amount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
+        _updatingAmount = false;
+
+        _selectedAmount = pending.Amount;
+        UpdatePayButton();
+
+        StatusText.Text =
+            "Checking your recent coffee payment...";
+
+        try
+        {
+            var status =
+                await SupportPurchaseService.GetStatusAsync(
+                    pending.CheckoutId);
+
+            if (status.IsPaid)
+            {
+                _paymentCompleted = true;
+                PendingCoffeeCheckoutStore.Clear();
+
+                StatusText.Text =
+                    "Payment successful. Thank you for supporting Lucky Dangle!";
+
+                PayButton.IsEnabled = false;
+                PayButton.Visibility = Visibility.Collapsed;
+
+                return;
+            }
+        }
+        catch
+        {
+        }
+
+        // A previous unpaid/abandoned checkout should not make the
+        // Coffee window look as if a payment page is currently open.
+        PendingCoffeeCheckoutStore.Clear();
+        StatusText.Text = "";
+    }
+
+    private void SupportWindow_Closed(
+        object? sender,
+        EventArgs e)
+    {
+        _paymentPolling?.Cancel();
+        _paymentPolling?.Dispose();
+        _paymentPolling = null;
+    }
+
+    private async Task PollCheckoutAsync(
+        string checkoutId,
+        TimeSpan duration)
+    {
+        _paymentPolling?.Cancel();
+        _paymentPolling?.Dispose();
+
+        _paymentPolling =
+            new CancellationTokenSource();
+
+        var token =
+            _paymentPolling.Token;
+
+        var deadline =
+            DateTime.UtcNow + duration;
+
+        try
+        {
+            while (
+                !token.IsCancellationRequested &&
+                DateTime.UtcNow < deadline)
+            {
+                try
+                {
+                    var status =
+                        await SupportPurchaseService.GetStatusAsync(
+                            checkoutId,
+                            token);
+
+                    if (status.IsPaid)
+                    {
+                        PendingCoffeeCheckoutStore.Clear();
+
+                        StatusText.Text =
+                            "Payment successful. Thank you for supporting Lucky Dangle!";
+
+                        _paymentCompleted = true;
+                        PayButton.IsEnabled = false;
+                        PayButton.Visibility = Visibility.Collapsed;
+                        RestoreAfterBrowserPayment();
+
+                        return;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                }
+
+                await Task.Delay(
+                    TimeSpan.FromSeconds(2),
+                    token);
+            }
+
+            if (!token.IsCancellationRequested)
+            {
+                StatusText.Text =
+                    "Payment was not confirmed yet. You can try again or close this window.";
+                RestoreAfterBrowserPayment();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+    private void MinimizeForBrowserPayment()
+    {
+        if (Owner != null)
+        {
+            _ownerPreviousState = Owner.WindowState;
+            Owner.WindowState = WindowState.Minimized;
+        }
+
+        WindowState = WindowState.Minimized;
+    }
+
+    private void RestoreAfterBrowserPayment()
+    {
+        if (Owner != null && _ownerPreviousState.HasValue)
+        {
+            Owner.WindowState = _ownerPreviousState.Value;
+            _ownerPreviousState = null;
+        }
+
+        WindowState = WindowState.Normal;
+        Activate();
+    }
     private void PresetAmount_Click(
         object sender,
         RoutedEventArgs e)
     {
-        if (sender is Button button &&
+        if (
+            sender is Button button &&
             button.Tag is string value &&
             decimal.TryParse(
                 value,
-                out decimal amount))
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var amount))
         {
-            updatingAmount = true;
+            _updatingAmount = true;
 
             CustomAmountTextBox.Text =
-                amount.ToString("0");
+                amount.ToString(
+                    "0.##",
+                    CultureInfo.InvariantCulture);
 
-            CustomAmountTextBox.SelectAll();
-
-            updatingAmount = false;
-
-            selectedAmount =
-                amount;
+            _updatingAmount = false;
+            _selectedAmount = amount;
 
             UpdatePayButton();
         }
     }
 
-
-    // =====================================================
-    // ONLY ALLOW NUMBERS + DECIMAL POINT
-    // =====================================================
-
     private void CustomAmountTextBox_PreviewTextInput(
-    object sender,
-    TextCompositionEventArgs e)
+        object sender,
+        TextCompositionEventArgs e)
     {
         if (!Regex.IsMatch(e.Text, @"^[0-9.]$"))
         {
@@ -97,414 +278,278 @@ public partial class SupportWindow : Window
             return;
         }
 
-        string currentText =
+        var current =
             CustomAmountTextBox.Text;
 
-        int selectionStart =
-            CustomAmountTextBox.SelectionStart;
+        var next =
+            current.Remove(
+                    CustomAmountTextBox.SelectionStart,
+                    CustomAmountTextBox.SelectionLength)
+                .Insert(
+                    CustomAmountTextBox.SelectionStart,
+                    e.Text);
 
-        int selectionLength =
-            CustomAmountTextBox.SelectionLength;
-
-        string newText =
-            currentText.Remove(
-                selectionStart,
-                selectionLength)
-            .Insert(
-                selectionStart,
-                e.Text);
-
-        // Don't allow more than 2 decimal places.
-        int decimalIndex =
-            newText.IndexOf('.');
-
-        if (decimalIndex >= 0 &&
-            newText.Length - decimalIndex - 1 > 2)
+        if (!Regex.IsMatch(
+                next,
+                @"^\d{0,5}(\.\d{0,2})?$"))
         {
             e.Handled = true;
             return;
         }
 
-        // Don't allow more than 5 digits before decimal.
-        string integerPart =
-            decimalIndex >= 0
-                ? newText[..decimalIndex]
-                : newText;
-
-        if (integerPart.Length > 5)
+        if (
+            decimal.TryParse(
+                next,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var amount) &&
+            amount > _maximumAmount)
         {
             e.Handled = true;
-            return;
         }
-
-        // Don't allow more than ₹5,000.
-        if (decimal.TryParse(
-                newText,
-                out decimal amount) &&
-            amount > MaximumAmount)
-        {
-            e.Handled = true;
-            return;
-        }
-
-        e.Handled = false;
     }
 
     private void CustomAmountTextBox_Pasting(
         object sender,
         DataObjectPastingEventArgs e)
     {
-        if (!e.DataObject.GetDataPresent(
-                typeof(string)))
+        if (!e.DataObject.GetDataPresent(typeof(string)))
         {
             e.CancelCommand();
             return;
         }
 
-        string pastedText =
-            e.DataObject.GetData(
-                typeof(string)) as string ?? "";
-
-        string currentText =
-            CustomAmountTextBox.Text;
-
-        int selectionStart =
-            CustomAmountTextBox.SelectionStart;
-
-        int selectionLength =
-            CustomAmountTextBox.SelectionLength;
-
-        string newText =
-            currentText.Remove(
-                selectionStart,
-                selectionLength)
-            .Insert(
-                selectionStart,
-                pastedText);
+        var pasted =
+            e.DataObject.GetData(typeof(string)) as string ?? "";
 
         if (!Regex.IsMatch(
-                newText,
+                pasted,
                 @"^\d{1,5}(\.\d{0,2})?$"))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        if (!decimal.TryParse(
-                newText,
-                out decimal amount))
-        {
-            e.CancelCommand();
-            return;
-        }
-
-        if (amount > MaximumAmount)
         {
             e.CancelCommand();
         }
     }
-
-
-    // =====================================================
-    // AMOUNT CHANGED
-    // =====================================================
 
     private void CustomAmountTextBox_TextChanged(
         object sender,
         TextChangedEventArgs e)
     {
-        if (updatingAmount)
-            return;
-
-        UpdatePayButton();
+        if (!_updatingAmount)
+            UpdatePayButton();
     }
-
-
-    // =====================================================
-    // VALIDATE WHEN USER LEAVES THE FIELD
-    // =====================================================
 
     private void CustomAmountTextBox_LostFocus(
-    object sender,
-    RoutedEventArgs e)
-{
-    if (!decimal.TryParse(
-            CustomAmountTextBox.Text.Trim(),
-            out decimal amount))
-    {
-        SetMinimumAmount();
-        return;
-    }
-
-    if (amount < MinimumAmount)
-    {
-        SetMinimumAmount();
-        return;
-    }
-
-    if (amount > MaximumAmount)
-    {
-        updatingAmount = true;
-
-        CustomAmountTextBox.Text =
-            MaximumAmount.ToString("0");
-
-        updatingAmount = false;
-
-        selectedAmount =
-            MaximumAmount;
-
-        UpdatePayButton();
-
-        return;
-    }
-
-    selectedAmount =
-        amount;
-
-    UpdatePayButton();
-}
-
-
-    // =====================================================
-    // UPDATE PAY BUTTON
-    // =====================================================
-
-    private void UpdatePayButton()
-    {
-        // IMPORTANT:
-        // During InitializeComponent(), TextChanged can fire
-        // before PayButton has been created.
-
-        if (PayButton == null ||
-            CustomAmountTextBox == null)
-        {
-            return;
-        }
-
-
-        if (decimal.TryParse(
-                CustomAmountTextBox.Text.Trim(),
-                out decimal amount) &&
-            amount >= MinimumAmount)
-        {
-            PayButton.Content =
-                $"Pay ₹{amount:0.##}";
-
-            return;
-        }
-
-
-        PayButton.Content =
-            "Pay";
-    }
-
-
-    // =====================================================
-    // PAY
-    // =====================================================
-
-    private void Pay_Click(
-    object sender,
-    RoutedEventArgs e)
-    {
-        if (!decimal.TryParse(
-                CustomAmountTextBox.Text.Trim(),
-                out decimal amount))
-        {
-            SetMinimumAmount();
-            return;
-        }
-
-        if (amount < MinimumAmount)
-        {
-            SetMinimumAmount();
-            return;
-        }
-
-        if (amount > MaximumAmount)
-        {
-            CustomAmountTextBox.Text =
-                MaximumAmount.ToString("0");
-
-            UpdatePayButton();
-
-            return;
-        }
-
-        amount =
-            Math.Round(
-                amount,
-                2,
-                MidpointRounding.AwayFromZero);
-
-        selectedAmount =
-            amount;
-
-        GeneratePaymentQr(amount);
-
-        PaymentAmountText.Text =
-            $"₹{amount:0.##}";
-
-        AmountScreen.Visibility =
-            Visibility.Collapsed;
-
-        PaymentScreen.Visibility =
-            Visibility.Visible;
-    }
-    
-
-
-    // =====================================================
-    // SET MINIMUM AMOUNT
-    // =====================================================
-
-    private void SetMinimumAmount()
-    {
-        if (CustomAmountTextBox == null)
-            return;
-
-
-        updatingAmount = true;
-
-        CustomAmountTextBox.Text =
-            "100";
-
-        updatingAmount = false;
-
-
-        selectedAmount =
-            MinimumAmount;
-
-
-        UpdatePayButton();
-
-
-        CustomAmountTextBox.Focus();
-
-        CustomAmountTextBox.SelectAll();
-    }
-
-
-    // =====================================================
-    // GENERATE AMOUNT-SPECIFIC UPI QR
-    // =====================================================
-
-    private void GeneratePaymentQr(
-        decimal amount)
-    {
-        // Example:
-        //
-        // upi://pay
-        // ?pa=rohitmallick85@oksbi
-        // &pn=Rohit%20Mallick
-        // &am=150.00
-        // &cu=INR
-        // &tn=Coffee%20to%20Rohit%20Mallick
-
-        string upiUri =
-            "upi://pay" +
-            $"?pa={Uri.EscapeDataString(UpiId)}" +
-            $"&pn={Uri.EscapeDataString(PayeeName)}" +
-            $"&am={amount:0.00}" +
-            "&cu=INR" +
-            $"&tn={Uri.EscapeDataString(
-                "Coffee to Rohit Mallick")}";
-
-
-        // -------------------------------------------------
-        // Generate QR
-        // -------------------------------------------------
-
-        using var qrGenerator =
-            new QRCodeGenerator();
-
-
-        using QRCodeData qrData =
-            qrGenerator.CreateQrCode(
-                upiUri,
-                QRCodeGenerator.ECCLevel.M);
-
-
-        using var qrCode =
-            new PngByteQRCode(qrData);
-
-
-        byte[] qrBytes =
-            qrCode.GetGraphic(
-                10,
-                drawQuietZones: true);
-
-
-        // -------------------------------------------------
-        // Convert PNG bytes to WPF BitmapImage
-        // -------------------------------------------------
-
-        var image =
-            new BitmapImage();
-
-
-        using var stream =
-            new MemoryStream(qrBytes);
-
-
-        image.BeginInit();
-
-        image.CacheOption =
-            BitmapCacheOption.OnLoad;
-
-        image.StreamSource =
-            stream;
-
-        image.EndInit();
-
-        image.Freeze();
-
-
-        // -------------------------------------------------
-        // Display QR
-        // -------------------------------------------------
-
-        PaymentQrImage.Source =
-            image;
-    }
-
-
-    // =====================================================
-    // CHANGE AMOUNT
-    // =====================================================
-
-    private void ChangeAmount_Click(
         object sender,
         RoutedEventArgs e)
     {
-        PaymentScreen.Visibility =
-            Visibility.Collapsed;
+        if (!TryGetAmount(out var amount))
+        {
+            SetMinimumAmount();
+            return;
+        }
 
-        AmountScreen.Visibility =
-            Visibility.Visible;
+        if (amount < _minimumAmount)
+        {
+            SetMinimumAmount();
+            return;
+        }
 
+        if (amount > _maximumAmount)
+        {
+            amount = _maximumAmount;
 
-        updatingAmount = true;
+            _updatingAmount = true;
 
-        CustomAmountTextBox.Text =
-            selectedAmount.ToString("0");
+            CustomAmountTextBox.Text =
+                amount.ToString(
+                    "0.##",
+                    CultureInfo.InvariantCulture);
 
-        updatingAmount = false;
+            _updatingAmount = false;
+        }
 
-
+        _selectedAmount = amount;
         UpdatePayButton();
-
-
-        CustomAmountTextBox.Focus();
-
-        CustomAmountTextBox.SelectAll();
     }
 
+    private bool TryGetAmount(out decimal amount)
+    {
+        return decimal.TryParse(
+            CustomAmountTextBox.Text.Trim(),
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out amount);
+    }
 
-    // =====================================================
-    // CLOSE
-    // =====================================================
+    private void SetMinimumAmount()
+    {
+        _selectedAmount = _minimumAmount;
+
+        _updatingAmount = true;
+
+        CustomAmountTextBox.Text =
+            _minimumAmount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
+
+        _updatingAmount = false;
+
+        UpdatePayButton();
+    }
+
+    private void UpdatePayButton()
+    {
+        if (PayButton == null)
+            return;
+
+        if (
+            TryGetAmount(out var amount) &&
+            amount >= _minimumAmount &&
+            amount <= _maximumAmount)
+        {
+            PayButton.Content =
+                _isIndia
+                    ? $"Pay INR {amount:0.##}"
+                    : $"Pay USD {amount:0.##}";
+        }
+        else
+        {
+            PayButton.Content = "Pay";
+        }
+    }
+
+    private static bool IsValidEmail(string email)
+    {
+        try
+        {
+            var address = new MailAddress(email);
+
+            if (!string.Equals(
+                    address.Address,
+                    email,
+                    StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var at = email.LastIndexOf('@');
+
+            if (at <= 0 || at >= email.Length - 1)
+                return false;
+
+            var domain = email[(at + 1)..];
+
+            if (
+                !domain.Contains('.') ||
+                domain.StartsWith('.') ||
+                domain.EndsWith('.'))
+                return false;
+
+            var parts = domain.Split('.');
+
+            if (parts.Length < 2)
+                return false;
+
+            var tld = parts[^1];
+
+            return
+                tld.Length >= 2 &&
+                tld.All(char.IsLetter);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async void Pay_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var email = EmailTextBox.Text.Trim();
+
+        if (!IsValidEmail(email))
+        {
+            StatusText.Text =
+                "Please enter a valid email address.";
+            return;
+        }
+
+        if (!TryGetAmount(out var amount))
+        {
+            SetMinimumAmount();
+            return;
+        }
+
+        if (
+            amount < _minimumAmount ||
+            amount > _maximumAmount)
+        {
+            StatusText.Text =
+                _isIndia
+                    ? "Enter an amount between INR 100 and INR 5,000."
+                    : "Enter an amount between USD 3 and USD 100.";
+            return;
+        }
+
+        amount = Math.Round(
+            amount,
+            2,
+            MidpointRounding.AwayFromZero);
+
+        _selectedAmount = amount;
+
+        try
+        {
+            PayButton.IsEnabled = false;
+            StatusText.Text =
+                "Opening secure payment...";
+
+            var checkout =
+                await SupportPurchaseService.CreateCheckoutAsync(
+                    email,
+                    amount);
+
+            if (string.IsNullOrWhiteSpace(checkout.CheckoutUrl))
+                throw new InvalidOperationException(
+                    "Payment link was not returned.");
+
+            PendingCoffeeCheckoutStore.Save(
+                new PendingCoffeeCheckout
+                {
+                    CheckoutId = checkout.CheckoutId,
+                    CheckoutUrl = checkout.CheckoutUrl,
+                    Email = email,
+                    Amount = amount,
+                    CreatedAtUtc = DateTime.UtcNow
+                });
+
+            MinimizeForBrowserPayment();
+
+            Process.Start(
+                new ProcessStartInfo
+                {
+                    FileName = checkout.CheckoutUrl,
+                    UseShellExecute = true
+                });
+
+            StatusText.Text =
+                _isIndia
+                    ? "Razorpay opened in your browser. Waiting for verified payment..."
+                    : "Dodo opened in your browser. Waiting for verified payment...";
+
+            await PollCheckoutAsync(
+                checkout.CheckoutId,
+                TimeSpan.FromMinutes(10));
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = ex.Message;
+        }
+        finally
+        {
+            if (!_paymentCompleted)
+                PayButton.IsEnabled = true;
+        }
+    }
 
     private void Close_Click(
         object sender,
