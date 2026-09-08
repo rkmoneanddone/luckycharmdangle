@@ -261,14 +261,14 @@ export const createPremiumCheckout = onRequest(
       ) {
         res.status(400).json({
           error:
-            `Amount must be at least ₹${PRICES[plan].minimumInr / 100}.`,
+            `Amount must be at least â‚¹${PRICES[plan].minimumInr / 100}.`,
         });
         return;
       }
 
-      if (requestedAmountPaise > 10000000) {
+      if (requestedAmountPaise > 1999900) {
         res.status(400).json({
-          error: "Contribution amount is too high.",
+          error: "Contribution amount cannot exceed INR 19,999.",
         });
         return;
       }
@@ -386,7 +386,7 @@ font-weight:700;font-size:16px;cursor:pointer}
 <div class="card">
 <h1>Lucky Dangle Premium</h1>
 <div class="muted">Unlock all Premium Collections</div>
-<div class="price">â‚¹${amount / 100}</div>
+<div class="price">Ã¢â€šÂ¹${amount / 100}</div>
 <button id="pay">Pay securely</button>
 <p class="muted" id="status"></p>
 </div>
@@ -410,7 +410,7 @@ const options = {
   },
   handler: async function (r) {
     document.getElementById("status").textContent =
-      "Verifying paymentâ€¦";
+      "Verifying paymentÃ¢â‚¬Â¦";
 
     const response = await fetch(
       ${JSON.stringify(`${BASE_URL}/razorpayVerify`)},
@@ -432,7 +432,7 @@ const options = {
 
     if (response.ok) {
       document.querySelector(".card").innerHTML =
-        "<h1>Payment successful âœ“</h1>" +
+        "<h1>Payment successful Ã¢Å“â€œ</h1>" +
         "<p class='muted'>Premium is being unlocked in Lucky Dangle. " +
         "You can return to the app.</p>";
     } else {
@@ -718,7 +718,7 @@ align-items:center;
 justify-content:center;
 min-height:100vh">
 <div style="text-align:center">
-<h1>Thank you âœ¦</h1>
+<h1>Thank you Ã¢Å“Â¦</h1>
 <p>Return to Lucky Dangle. Premium will unlock after payment verification.</p>
 </div>
 </body>

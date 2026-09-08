@@ -74,6 +74,8 @@ public partial class CharmPickerWindow : Window
     {
         InitializeComponent();
 
+        RefreshPremiumAccessBadge();
+
         this.currentDangle =
             currentDangle;
 
@@ -1496,8 +1498,19 @@ public partial class CharmPickerWindow : Window
         };
 
         premium.ShowDialog();
+        RefreshPremiumAccessBadge();
     }
 
+    private void RefreshPremiumAccessBadge()
+    {
+        var entitlement = PremiumEntitlementStore.Load();
+
+        PremiumAccessButton.Tag =
+            entitlement is not null &&
+            entitlement.ExpiresAtUtc > DateTime.UtcNow
+                ? "ACTIVE"
+                : "UNLOCK";
+    }
     private static SolidColorBrush Brush(
         string hex)
     {

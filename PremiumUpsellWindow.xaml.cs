@@ -40,7 +40,10 @@ public partial class PremiumUpsellWindow : Window
             ? (IsIndia ? 299m : 9m)
             : (IsIndia ? 199m : 6m);
 
-    private void ApplyMarketPricing()
+    
+    private decimal MaximumAmount =>
+        IsIndia ? 19999m : 200m;
+private void ApplyMarketPricing()
     {
         if (IsIndia)
         {
@@ -142,6 +145,43 @@ public partial class PremiumUpsellWindow : Window
         }
     }
 
+    private void AmountTextBox_TextChanged(
+        object sender,
+        System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (!IsLoaded)
+            return;
+
+        var raw =
+            AmountTextBox.Text.Trim()
+                .Replace(",", "");
+
+        if (!decimal.TryParse(
+                raw,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var amount))
+        {
+            return;
+        }
+
+        if (amount <= MaximumAmount)
+            return;
+
+        AmountTextBox.Text =
+            MaximumAmount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
+
+        AmountTextBox.CaretIndex =
+            AmountTextBox.Text.Length;
+
+        SetStatus(
+            IsIndia
+                ? $"Maximum amount is \u20B9{MaximumAmount:0}."
+                : $"Maximum amount is ${MaximumAmount:0}.",
+            true);
+    }
     private bool TryReadAmount(out decimal amount)
     {
         amount = 0m;
@@ -171,10 +211,12 @@ public partial class PremiumUpsellWindow : Window
             return false;
         }
 
-        if (amount > 100000m)
+        if (amount > MaximumAmount)
         {
             SetStatus(
-                "Please enter a smaller contribution amount.",
+                IsIndia
+                    ? $"Maximum amount is \u20B9{MaximumAmount:0}."
+                    : $"Maximum amount is ${MaximumAmount:0}.",
                 true);
 
             return false;

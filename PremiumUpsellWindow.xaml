@@ -72,7 +72,7 @@
           <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <StackPanel x:Name="PurchasePanel">
-          <TextBlock Text="Make Premium Yours" HorizontalAlignment="Center" Foreground="White" FontSize="23" FontWeight="Bold" />
+          <TextBlock Text="Make All Premium Yours" HorizontalAlignment="Center" Foreground="White" FontSize="23" FontWeight="Bold" />
           <TextBlock Text="Unlock all Premium Collections" Margin="0,3,0,15" HorizontalAlignment="Center" Foreground="#AEB4C3" FontSize="13" />
           <Grid>
             <Grid.ColumnDefinitions>
@@ -102,7 +102,8 @@
             <Border Grid.Column="0" Background="#202430" BorderBrush="#3A4050" BorderThickness="1,1,0,1" CornerRadius="10,0,0,10">
               <TextBlock x:Name="CurrencyText" Text="&#x20B9;" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFD36A" FontSize="18" FontWeight="Bold" />
             </Border>
-            <TextBox x:Name="AmountTextBox" Grid.Column="1" Height="42" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
+            <TextBox x:Name="AmountTextBox"
+                             TextChanged="AmountTextBox_TextChanged" Grid.Column="1" Height="42" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
           </Grid>
           <TextBlock x:Name="AmountHintText" Text="Minimum &#x20B9;199. You may contribute more if you wish." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
           <TextBlock Text="Email" Margin="2,11,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
