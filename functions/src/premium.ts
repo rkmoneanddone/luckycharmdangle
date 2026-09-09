@@ -89,15 +89,18 @@ function addMonthsUtc(start: Date, months: number): Date {
   return d;
 }
 
-async function grantEntitlement(
+export async function grantPremiumEntitlementFromVerifiedPayment(
   checkoutId: string,
   paymentId: string,
+  provider: "razorpay" | "dodo",
 ) {
   const checkoutRef =
     db.collection("premiumCheckouts").doc(checkoutId);
 
   const paymentRef =
-    db.collection("payments").doc(`${PAYMENT_ENVIRONMENT}_razorpay_${paymentId}`);
+    db.collection("payments").doc(
+      `${PAYMENT_ENVIRONMENT}_${provider}_${paymentId}`,
+    );
 
   return db.runTransaction(async (tx) => {
     const checkoutSnap = await tx.get(checkoutRef);
@@ -111,8 +114,17 @@ async function grantEntitlement(
     const email = checkout.email as string;
     const eHash = emailHash(email);
 
+    if (!isPlan(plan)) {
+      throw new Error("Invalid Premium plan.");
+    }
+
+    if (String(checkout.provider ?? "") !== provider) {
+      throw new Error("Checkout provider mismatch.");
+    }
+
     const entitlementRef =
-      db.collection("premiumEntitlements").doc(entitlementDocId(email));
+      db.collection("premiumEntitlements")
+        .doc(entitlementDocId(email));
 
     const priorPayment = await tx.get(paymentRef);
     const currentEntitlement = await tx.get(entitlementRef);
@@ -124,7 +136,8 @@ async function grantEntitlement(
         email,
         expiresAt:
           current?.expiresAt?.toDate?.() ?? new Date(),
-        restoreCode: checkout.restoreCode ?? "",
+        restoreCode: String(checkout.restoreCode ?? ""),
+        newlyGranted: false,
       };
     }
 
@@ -152,7 +165,7 @@ async function grantEntitlement(
         product: "lucky_dangle_premium",
         status: "active",
         plan,
-        provider: "razorpay",
+        provider,
         environment: PAYMENT_ENVIRONMENT,
         paymentId,
         purchasedAt: Timestamp.fromDate(now),
@@ -165,15 +178,18 @@ async function grantEntitlement(
 
     tx.set(paymentRef, {
       type: "premium",
-      provider: "razorpay",
+      provider,
       environment: PAYMENT_ENVIRONMENT,
       paymentId,
       checkoutId,
       email,
       emailHash: eHash,
       plan,
-      amount: Number(checkout.amount ?? PRICES[plan].minimumInr),
-      currency: "INR",
+      amount: Number(checkout.amount ?? 0),
+      currency: String(
+        checkout.currency ??
+        (provider === "razorpay" ? "INR" : "USD"),
+      ),
       status: "paid",
       createdAt: Timestamp.fromDate(now),
     });
@@ -183,7 +199,7 @@ async function grantEntitlement(
       {
         status: "paid",
         paymentId,
-        provider: "razorpay",
+        provider,
         restoreCode,
         expiresAt: Timestamp.fromDate(expiresAt),
         paidAt: Timestamp.fromDate(now),
@@ -191,10 +207,14 @@ async function grantEntitlement(
       { merge: true },
     );
 
-    return { email, expiresAt, restoreCode };
+    return {
+      email,
+      expiresAt,
+      restoreCode,
+      newlyGranted: true,
+    };
   });
 }
-
 async function createRazorpayOrder(checkoutId: string, email: string, plan: PremiumPlan, amountPaise: number) {
   const auth = Buffer.from(
     `${RAZORPAY_KEY_ID.value()}:${RAZORPAY_KEY_SECRET.value()}`,
@@ -736,25 +756,28 @@ export const razorpayVerify = onRequest(
       }
 
       const entitlement =
-        await grantEntitlement(
+        await grantPremiumEntitlementFromVerifiedPayment(
           checkoutId,
           paymentId,
+          "razorpay",
         );
 
-      try {
-        await sendPremiumActivatedEmail({
-          email: entitlement.email,
-          plan: String(checkout.plan ?? ""),
-          amountMinor: Number(checkout.amount ?? 0),
-          currency: String(checkout.currency ?? "INR"),
-          paymentId,
-          expiresAt: entitlement.expiresAt,
-        });
-      } catch (mailError) {
-        console.error(
-          "Premium confirmation email failed",
-          mailError,
-        );
+      if (entitlement.newlyGranted) {
+        try {
+          await sendPremiumActivatedEmail({
+            email: entitlement.email,
+            plan: String(checkout.plan ?? ""),
+            amountMinor: Number(checkout.amount ?? 0),
+            currency: String(checkout.currency ?? "INR"),
+            paymentId,
+            expiresAt: entitlement.expiresAt,
+          });
+        } catch (mailError) {
+          console.error(
+            "Premium confirmation email failed",
+            mailError,
+          );
+        }
       }
 
       res.json({
@@ -929,19 +952,41 @@ export const premiumReturn = onRequest(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lucky Dangle</title>
+<title>Lucky Dangle Premium</title>
+<style>
+body{
+  font-family:Segoe UI,Arial,sans-serif;
+  background:#151822;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  margin:0;
+}
+.card{
+  width:min(480px,88vw);
+  background:#1d202b;
+  border:1px solid #3a4050;
+  border-radius:24px;
+  padding:34px;
+  text-align:center;
+}
+h1{
+  margin:0 0 12px;
+}
+p{
+  color:#aeb4c3;
+  line-height:1.55;
+  margin:8px 0;
+}
+</style>
 </head>
-<body style="
-font-family:Segoe UI,Arial;
-background:#151822;
-color:white;
-display:flex;
-align-items:center;
-justify-content:center;
-min-height:100vh">
-<div style="text-align:center">
-<h1>Thank you Ã¢Å“Â¦</h1>
-<p>Return to Lucky Dangle. Premium will unlock after payment verification.</p>
+<body>
+<div class="card">
+  <h1>Thank you!</h1>
+  <p>Payment received. Lucky Dangle is verifying your Premium access.</p>
+  <p>You can return to Lucky Dangle and close this browser tab.</p>
 </div>
 </body>
 </html>`);

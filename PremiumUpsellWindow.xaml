@@ -6,7 +6,7 @@
       <GradientStop Color="#FFFFA928" Offset="1" />
     </LinearGradientBrush>
     <Style x:Key="PrimaryButton" TargetType="Button">
-      <Setter Property="Height" Value="44" />
+      <Setter Property="Height" Value="42" />
       <Setter Property="FontSize" Value="15" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="Foreground" Value="#191B24" />
@@ -37,7 +37,7 @@
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="RadioButton">
-            <Border x:Name="PlanBorder" Padding="13,10" Background="#1D202B" BorderBrush="#3A4050" BorderThickness="1.5" CornerRadius="12">
+            <Border x:Name="PlanBorder" Padding="13,9" Background="#1D202B" BorderBrush="#3A4050" BorderThickness="1.5" CornerRadius="12">
               <Grid>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="28" />
@@ -65,7 +65,7 @@
   <Border CornerRadius="22" Background="#151822" BorderBrush="#3B3F4D" BorderThickness="1">
     <Grid>
       <Border Height="6" VerticalAlignment="Top" CornerRadius="22,22,0,0" Background="{StaticResource GoldBrush}" />
-      <Button Content="X" Width="32" Height="32" Margin="0,14,14,0" HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="#B7BBC8" Background="Transparent" BorderThickness="0" FontSize="15" Cursor="Hand" Click="Close_Click" />
+      <Button Content="X" Width="32" Height="30" Margin="0,14,14,0" HorizontalAlignment="Right" VerticalAlignment="Top" Foreground="#B7BBC8" Background="Transparent" BorderThickness="0" FontSize="15" Cursor="Hand" Click="Close_Click" />
       <Grid Margin="30,24,30,24">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
@@ -73,7 +73,7 @@
         </Grid.RowDefinitions>
         <StackPanel x:Name="PurchasePanel">
           <TextBlock Text="Make All Premium Yours" HorizontalAlignment="Center" Foreground="White" FontSize="23" FontWeight="Bold" />
-          <TextBlock Text="Unlock all Premium Collections" Margin="0,3,0,15" HorizontalAlignment="Center" Foreground="#AEB4C3" FontSize="13" />
+          <TextBlock Text="Unlock all Premium Collections" Margin="0,3,0,12" HorizontalAlignment="Center" Foreground="#AEB4C3" FontSize="13" />
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
@@ -93,7 +93,7 @@
               </StackPanel>
             </RadioButton>
           </Grid>
-          <TextBlock Text="Amount" Margin="2,13,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
+          <TextBlock Text="Amount" Margin="2,9,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="40" />
@@ -103,21 +103,21 @@
               <TextBlock x:Name="CurrencyText" Text="&#x20B9;" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#FFD36A" FontSize="18" FontWeight="Bold" />
             </Border>
             <TextBox x:Name="AmountTextBox"
-                             TextChanged="AmountTextBox_TextChanged" PreviewTextInput="AmountTextBox_PreviewTextInput" Grid.Column="1" Height="42" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
+                             TextChanged="AmountTextBox_TextChanged" PreviewTextInput="AmountTextBox_PreviewTextInput" Grid.Column="1" Height="38" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
           </Grid>
           <TextBlock x:Name="AmountHintText" Text="Minimum &#x20B9;199. You may contribute more if you wish." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
-          <TextBlock Text="Email" Margin="2,11,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
-          <TextBox x:Name="EmailTextBox" Height="42" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
-                <StackPanel Margin="0,8,0,0">
+          <TextBlock Text="Email" Margin="2,9,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
+          <TextBox x:Name="EmailTextBox" Height="38" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
+                <StackPanel Margin="0,6,0,0">
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="SendPurchaseOtpButton"
                                 Content="SEND VERIFICATION CODE"
                                 Width="180"
-                                Height="32"
+                                Height="30"
                                 Click="SendPurchaseOtp_Click"/>
                         <TextBox x:Name="PurchaseOtpTextBox"
                                  Width="90"
-                                 Height="32"
+                                 Height="30"
                                  Margin="10,0,0,0"
                                  MaxLength="6"
                                  VerticalContentAlignment="Center"
@@ -125,7 +125,7 @@
                         <Button x:Name="VerifyPurchaseOtpButton"
                                 Content="VERIFY"
                                 Width="80"
-                                Height="32"
+                                Height="30"
                                 Margin="10,0,0,0"
                                 Click="VerifyPurchaseOtp_Click"
                                 IsEnabled="False"/>
@@ -137,13 +137,13 @@
                                FontSize="11"/>
                 </StackPanel>
           <TextBlock x:Name="StatusText" Margin="2,7,2,0" TextWrapping="Wrap" Foreground="#AEB4C3" FontSize="11.5" />
-          <Button x:Name="UnlockButton" Content="Unlock Premium" Margin="0,12,0,0" Style="{StaticResource PrimaryButton}" Click="Unlock_Click" />
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+          <Button x:Name="UnlockButton" Content="Unlock Premium" Height="40" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="Unlock_Click" />
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
             <TextBlock Text="Already purchased?" Foreground="#8F96A6" VerticalAlignment="Center" FontSize="12" />
             <Button Content="Have a license?" Margin="3,0,0,0" Style="{StaticResource LinkButton}" Click="Restore_Click" />
           </StackPanel>                    <TextBlock x:Name="RefundPolicyText"
                      Text="Refund Policy: Premium payments are generally non-refundable."
-                     Margin="8,8,8,0"
+                     Margin="8,5,8,0"
                      TextWrapping="Wrap"
                      TextAlignment="Center"
                      Foreground="#C9A85A"
@@ -177,10 +177,10 @@
           <TextBlock Text="Restore Premium" HorizontalAlignment="Center" Foreground="White" FontSize="22" FontWeight="Bold" />
           <TextBlock Text="Use the email connected to your purchase." Margin="0,4,0,15" HorizontalAlignment="Center" Foreground="#AEB4C3" FontSize="12.5" />
           <TextBlock Text="Email" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
-          <TextBox x:Name="RestoreEmailTextBox" Height="42" Margin="0,4,0,0" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
+          <TextBox x:Name="RestoreEmailTextBox" Height="40" Margin="0,4,0,0" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
           <Button x:Name="SendRestoreCodeButton" Content="Send Verification Code" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="SendRestoreCode_Click" />
           <TextBlock Text="6-digit verification code" Margin="0,12,0,0" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
-          <TextBox x:Name="RestoreCodeTextBox" Height="42" Margin="0,4,0,0" Padding="10,8" FontSize="16" MaxLength="6" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
+          <TextBox x:Name="RestoreCodeTextBox" Height="40" Margin="0,4,0,0" Padding="10,8" FontSize="16" MaxLength="6" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
           <TextBlock x:Name="RestoreInfoText" Margin="0,8,0,0" Text="" TextWrapping="Wrap" Foreground="#8F96A6" FontSize="11.5" />
           <Button x:Name="VerifyRestoreButton" Content="Verify &amp; Restore" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="VerifyRestore_Click" />
           <Button Content="Back to Purchase" Margin="0,10,0,0" Style="{StaticResource LinkButton}" Click="BackToPurchase_Click" />

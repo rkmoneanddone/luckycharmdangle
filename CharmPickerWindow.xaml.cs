@@ -1321,6 +1321,36 @@ public partial class CharmPickerWindow : Window
         {
             new PremiumUpsellWindow { Owner = this }.ShowDialog();
 
+            // Premium may have been activated inside the dialog.
+            RefreshPremiumAccessBadge();
+
+            if (DangleAccessService.CanUse(dangle))
+            {
+                selectedDangle = dangle;
+
+                if (
+                    showingCollectionDangles &&
+                    !string.IsNullOrWhiteSpace(currentCollection))
+                {
+                    var refreshed =
+                        DangleCatalog.GetAll()
+                            .Where(item =>
+                                string.Equals(
+                                    item.Collection,
+                                    currentCollection,
+                                    StringComparison.OrdinalIgnoreCase))
+                            .ToList();
+
+                    ShowCollectionDangles(
+                        currentCollection!,
+                        refreshed);
+                }
+                else
+                {
+                    ShowCollections(DangleCatalog.GetAll());
+                }
+            }
+
             return;
         }
 

@@ -6,7 +6,11 @@ import { Webhook } from "standardwebhooks";
 import {
   SMTP_PASSWORD,
   sendCoffeeThankYouEmail,
+  sendPremiumActivatedEmail,
 } from "./email";
+import {
+  grantPremiumEntitlementFromVerifiedPayment,
+} from "./premium";
 
 if (getApps().length === 0) {
   initializeApp();
@@ -95,7 +99,17 @@ export const dodoWebhook = onRequest(
       const existingEvent =
         await webhookEventRef.get();
 
-      if (existingEvent.exists) {
+      const existingStatus =
+        String(existingEvent.data()?.status ?? "");
+
+      if (
+        existingEvent.exists &&
+        (
+          existingStatus === "processed" ||
+          existingStatus === "ignored" ||
+          existingStatus === "rejected"
+        )
+      ) {
         res.status(200).json({
           received: true,
           duplicate: true,
@@ -103,13 +117,16 @@ export const dodoWebhook = onRequest(
         return;
       }
 
-      await webhookEventRef.set({
-        webhookId,
-        eventType,
-        environment: PAYMENT_ENVIRONMENT,
-        status: "received",
-        receivedAt: Timestamp.now(),
-      });
+      await webhookEventRef.set(
+        {
+          webhookId,
+          eventType,
+          environment: PAYMENT_ENVIRONMENT,
+          status: "received",
+          receivedAt: Timestamp.now(),
+        },
+        { merge: true },
+      );
 
       if (eventType !== "payment.succeeded") {
         await webhookEventRef.set(
@@ -148,11 +165,166 @@ export const dodoWebhook = onRequest(
       const metadataType =
         String(metadata?.type ?? "").trim().toLowerCase();
 
+      if (metadataType === "premium") {
+        const checkoutRef =
+          db.collection("premiumCheckouts").doc(checkoutId);
+
+        const checkoutSnap =
+          await checkoutRef.get();
+
+        if (!checkoutSnap.exists) {
+          await webhookEventRef.set(
+            {
+              status: "rejected",
+              reason: "premium_checkout_not_found",
+              checkoutId,
+              updatedAt: Timestamp.now(),
+            },
+            { merge: true },
+          );
+
+          res.status(400).json({
+            error: "Premium checkout not found.",
+          });
+          return;
+        }
+
+        const checkout = checkoutSnap.data()!;
+
+        const paymentId =
+          String(payload?.payment_id ?? "").trim();
+
+        const providerOrderId =
+          String(payload?.checkout_session_id ?? "").trim();
+
+        const currency =
+          String(payload?.currency ?? "")
+            .trim()
+            .toUpperCase();
+
+        const totalAmount =
+          Number(payload?.total_amount ?? NaN);
+
+        const customerEmail =
+          normalizeEmail(
+            String(payload?.customer?.email ?? ""),
+          );
+
+        const productId =
+          String(
+            payload?.product_cart?.[0]?.product_id ?? "",
+          ).trim();
+
+        const metadataPlan =
+          String(metadata?.plan ?? "").trim();
+
+        const valid =
+          checkout.provider === "dodo" &&
+          checkout.environment === PAYMENT_ENVIRONMENT &&
+          String(checkout.providerOrderId ?? "") ===
+            providerOrderId &&
+          String(checkout.providerProductId ?? "") ===
+            productId &&
+          Number(checkout.amount ?? NaN) ===
+            totalAmount &&
+          String(checkout.currency ?? "")
+            .toUpperCase() === currency &&
+          normalizeEmail(String(checkout.email ?? "")) ===
+            customerEmail &&
+          String(checkout.plan ?? "") === metadataPlan &&
+          (
+            metadataPlan === "premium_6m" ||
+            metadataPlan === "premium_12m"
+          ) &&
+          String(payload?.status ?? "")
+            .toLowerCase() === "succeeded" &&
+          Boolean(paymentId);
+
+        if (!valid) {
+          await webhookEventRef.set(
+            {
+              status: "rejected",
+              reason:
+                "premium_payment_validation_failed",
+              checkoutId,
+              paymentId,
+              updatedAt: Timestamp.now(),
+            },
+            { merge: true },
+          );
+
+          console.error(
+            "Dodo Premium validation failed",
+            {
+              checkoutId,
+              paymentId,
+              providerOrderId,
+              productId,
+              totalAmount,
+              currency,
+              metadataPlan,
+            },
+          );
+
+          res.status(400).json({
+            error: "Premium payment validation failed.",
+          });
+          return;
+        }
+
+        const entitlement =
+          await grantPremiumEntitlementFromVerifiedPayment(
+            checkoutId,
+            paymentId,
+            "dodo",
+          );
+
+        if (entitlement.newlyGranted) {
+          try {
+            await sendPremiumActivatedEmail({
+              email: entitlement.email,
+              plan: String(checkout.plan ?? ""),
+              amountMinor:
+                Number(checkout.amount ?? 0),
+              currency:
+                String(checkout.currency ?? "USD"),
+              paymentId,
+              expiresAt: entitlement.expiresAt,
+            });
+          } catch (mailError) {
+            console.error(
+              "Dodo Premium confirmation email failed",
+              mailError,
+            );
+          }
+        }
+
+        await webhookEventRef.set(
+          {
+            status: "processed",
+            checkoutId,
+            paymentId,
+            type: "premium",
+            processedAt: Timestamp.now(),
+          },
+          { merge: true },
+        );
+
+        res.status(200).json({
+          received: true,
+          processed: true,
+          type: "premium",
+          duplicatePayment:
+            !entitlement.newlyGranted,
+        });
+        return;
+      }
+
       if (metadataType !== "coffee") {
         await webhookEventRef.set(
           {
-            status: "received",
-            reason: "non_coffee_event",
+            status: "ignored",
+            reason: "unsupported_payment_type",
             checkoutId,
             updatedAt: Timestamp.now(),
           },
@@ -161,7 +333,7 @@ export const dodoWebhook = onRequest(
 
         res.status(200).json({
           received: true,
-          pendingIntegration: true,
+          ignored: true,
         });
         return;
       }
