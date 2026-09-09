@@ -57,3 +57,5 @@ Thumbs.db
 # ==========================================
 
 *.log
+.premium-menu-backup/
+.update-feature-backup/
