@@ -17,8 +17,7 @@ public sealed class LuckyCoinDangle : ImageDangleBase
     public override string Collection =>
         "Lucky Charms";
 
-    public override bool IsPremium =>
-        true;
+    public override bool IsPremium => false;
 
     public override bool IsSeasonal =>
         false;

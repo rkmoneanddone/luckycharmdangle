@@ -1,21 +1,21 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class GoldenFortunePremiumDangle : ImageDangleBase
+public sealed class DiwaliCrackersPremiumDangle : ImageDangleBase
 {
     public override string Id =>
-        "premium_golden_fortune";
+        "indian_festival_diwali_crackers";
 
     public override string Name =>
-        "Golden Fortune";
+        "Diwali Crackers";
 
     public override string Description =>
-        "A Premium fortune charm inspired by the classic lucky coin.";
+        "A bright Deepawali fireworks charm celebrating festive lights, sparkle and joy.";
 
     public override string Category =>
-        "Luck";
+        "Festive";
 
     public override string Collection =>
-        "Premium Collection";
+        "Indian Festivals";
 
     public override bool IsPremium =>
         true;
@@ -24,10 +24,10 @@ public sealed class GoldenFortunePremiumDangle : ImageDangleBase
         true;
 
     public override bool IsSeasonal =>
-        false;
+        true;
 
     protected override string AssetPath =>
-        "Assets/Dangles/lucky_coin.png";
+        "Assets/Dangles/IndianFestivals/diwali_crackers.png";
 
     protected override double ImageWidth =>
         145;

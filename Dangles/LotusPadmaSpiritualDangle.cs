@@ -17,8 +17,7 @@ public sealed class LotusPadmaSpiritualDangle : ImageDangleBase
     public override string Collection =>
         "Spiritual";
 
-    public override bool IsPremium =>
-        true;
+    public override bool IsPremium => false;
 
     public override bool IsSeasonal =>
         false;

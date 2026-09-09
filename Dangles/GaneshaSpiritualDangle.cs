@@ -17,8 +17,7 @@ public sealed class GaneshaSpiritualDangle : ImageDangleBase
     public override string Collection =>
         "Spiritual";
 
-    public override bool IsPremium =>
-        true;
+    public override bool IsPremium => false;
 public override bool IsSeasonal =>
         false;
 
@@ -26,8 +25,7 @@ public override bool IsSeasonal =>
 #if DEBUG
     // Development-only Premium purchase-flow test.
     // Release builds keep this previously shipped dangle free.
-    public override bool RequiresPremiumAccess =>
-        true;
+    public override bool RequiresPremiumAccess => false;
 #endif
 protected override string AssetPath =>
         "Assets/Dangles/spiritual_ganesha.png";

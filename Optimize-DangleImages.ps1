@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 # LuckyCharm - Dangle Image Optimizer
 #
 # Input:
-#   E:\projects\LuckyDangle\Assets\Dangles
+#   E:\projects\LuckyDangle\Assets\Dangles1
 #
 # Goal:
 #   Maximum 250 KB per PNG
@@ -22,7 +22,7 @@ $ErrorActionPreference = "Stop"
 #   ImageMagick ("magick" command)
 # ============================================================
 
-$DangleFolder = "F:\projects\LuckyDangle\Assets\Share"
+$DangleFolder = "F:\projects\LuckyDangle\Assets\Dangles1"
 
 $MaxBytes = 250KB
 
