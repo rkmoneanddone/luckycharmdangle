@@ -4,6 +4,9 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendPremiumActivatedEmail } from "./email";
+import { getRuntimeConfig } from "./runtimeConfig";
+import { consumePremiumPurchaseVerification } from "./purchaseOtp";
+import { issueEntitlementValidationToken } from "./entitlementValidation";
 
 if (getApps().length === 0) {
   initializeApp();
@@ -16,6 +19,7 @@ const BASE_URL =
 
 const RAZORPAY_KEY_ID = defineSecret("RAZORPAY_KEY_ID");
 const RAZORPAY_KEY_SECRET = defineSecret("RAZORPAY_KEY_SECRET");
+const DODO_PAYMENTS_API_KEY = defineSecret("DODO_PAYMENTS_API_KEY");
 
 type PremiumPlan = "premium_6m" | "premium_12m";
 
@@ -226,12 +230,78 @@ async function createRazorpayOrder(checkoutId: string, email: string, plan: Prem
   return await response.json() as { id: string };
 }
 
+async function createDodoPremiumCheckout(
+  checkoutId: string,
+  email: string,
+  plan: PremiumPlan,
+  amountUsdCents: number,
+  productId: string,
+) {
+  const response = await fetch(
+    "https://test.dodopayments.com/checkouts",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${DODO_PAYMENTS_API_KEY.value()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_cart: [
+          {
+            product_id: productId,
+            quantity: 1,
+            amount: amountUsdCents,
+          },
+        ],
+        customer: {
+          email,
+          name: "Lucky Dangle Customer",
+        },
+        billing_currency: "USD",
+        feature_flags: {
+          allow_customer_editing_email: false,
+          allow_currency_selection: false,
+        },
+        metadata: {
+          product: "lucky_dangle",
+          type: "premium",
+          plan,
+          checkout_id: checkoutId,
+          email_hash: emailHash(email),
+          environment: PAYMENT_ENVIRONMENT,
+        },
+        return_url:
+          `${BASE_URL}/premiumReturn?checkoutId=` +
+          encodeURIComponent(checkoutId),
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    console.error("Dodo Premium checkout error", detail);
+    throw new Error("Dodo checkout creation failed.");
+  }
+
+  const result = await response.json() as {
+    session_id: string;
+    checkout_url: string | null;
+    payment_id?: string | null;
+  };
+
+  if (!result.session_id || !result.checkout_url) {
+    throw new Error("Dodo returned an invalid checkout session.");
+  }
+
+  return result;
+}
 export const createPremiumCheckout = onRequest(
   {
     region: REGION,
     secrets: [
       RAZORPAY_KEY_ID,
       RAZORPAY_KEY_SECRET,
+      DODO_PAYMENTS_API_KEY,
     ],
   },
   async (req, res) => {
@@ -250,6 +320,8 @@ export const createPremiumCheckout = onRequest(
     try {
       const email =
         normalizeEmail(String(req.body?.email ?? ""));
+      const verificationToken =
+        String(req.body?.verificationToken ?? "").trim();
 
       const plan = req.body?.plan;
       const market =
@@ -258,8 +330,9 @@ export const createPremiumCheckout = onRequest(
       const requestedAmount =
         Number(req.body?.amount ?? 0);
 
-      const requestedAmountPaise =
-        Math.round(requestedAmount * 100);
+      const runtimeConfig = await getRuntimeConfig();
+      const premiumConfig = runtimeConfig.premium;
+      const providerConfig = runtimeConfig.providers;
 
       if (!email || !email.includes("@")) {
         res.status(400).json({
@@ -275,27 +348,56 @@ export const createPremiumCheckout = onRequest(
         return;
       }
 
+      const isIndia = market === "IN";
+
+      const requestedMinor =
+        Math.round(requestedAmount * 100);
+
+      const minimumMinor = isIndia
+        ? (
+            plan === "premium_12m"
+              ? premiumConfig.india12mMin
+              : premiumConfig.india6mMin
+          ) * 100
+        : (
+            plan === "premium_12m"
+              ? premiumConfig.international12mMin
+              : premiumConfig.international6mMin
+          ) * 100;
+
+      const maximumMinor = isIndia
+        ? premiumConfig.indiaMax * 100
+        : premiumConfig.internationalMax * 100;
+
+      const currency = isIndia ? "INR" : "USD";
+
       if (
-        !Number.isFinite(requestedAmountPaise) ||
-        requestedAmountPaise < PRICES[plan].minimumInr
+        !Number.isFinite(requestedMinor) ||
+        requestedMinor < minimumMinor
       ) {
         res.status(400).json({
           error:
-            `Amount must be at least INR ${PRICES[plan].minimumInr / 100}.`,
+            `Amount must be at least ${currency} ${minimumMinor / 100}.`,
         });
         return;
       }
 
-      if (requestedAmountPaise > MAX_INR_PAISE) {
+      if (requestedMinor > maximumMinor) {
         res.status(400).json({
-          error: "Contribution amount cannot exceed INR 19,999.",
+          error:
+            `Contribution amount cannot exceed ${currency} ${maximumMinor / 100}.`,
         });
         return;
       }
 
-      // Until Dodo is activated, international checkout is intentionally
-      // blocked server-side rather than silently using Indian pricing.
-      if (market !== "IN") {
+      if (isIndia && !providerConfig.razorpayEnabled) {
+        res.status(503).json({
+          error: "Premium payments are temporarily unavailable.",
+        });
+        return;
+      }
+
+      if (!isIndia && !providerConfig.dodoEnabled) {
         res.status(503).json({
           error:
             "International Premium payments are temporarily unavailable.",
@@ -303,18 +405,96 @@ export const createPremiumCheckout = onRequest(
         return;
       }
 
+      const verifiedForCheckout =
+        await consumePremiumPurchaseVerification(
+          email,
+          verificationToken,
+        );
+
+      if (!verifiedForCheckout) {
+        res.status(403).json({
+          error: "Email verification required.",
+        });
+        return;
+      }
+
       const checkoutRef =
         db.collection("premiumCheckouts").doc();
+
+      if (!isIndia) {
+        const productId =
+          plan === "premium_12m"
+            ? providerConfig.dodoPremium12mProductId
+            : providerConfig.dodoPremium6mProductId;
+
+        if (!productId) {
+          res.status(503).json({
+            error: "Dodo Premium product is not configured.",
+          });
+          return;
+        }
+
+        await checkoutRef.set({
+          email,
+          emailHash: emailHash(email),
+          plan,
+          market: "INTL",
+          provider: "dodo",
+          environment: PAYMENT_ENVIRONMENT,
+          status: "created",
+          amount: requestedMinor,
+          currency: "USD",
+          providerProductId: productId,
+          createdAt: Timestamp.now(),
+        });
+
+        try {
+          const session =
+            await createDodoPremiumCheckout(
+              checkoutRef.id,
+              email,
+              plan,
+              requestedMinor,
+              productId,
+            );
+
+          await checkoutRef.set(
+            {
+              providerOrderId: session.session_id,
+              providerPaymentId:
+                session.payment_id ?? null,
+            },
+            { merge: true },
+          );
+
+          res.json({
+            checkoutId: checkoutRef.id,
+            checkoutUrl: session.checkout_url,
+            provider: "dodo",
+          });
+          return;
+        } catch (error) {
+          await checkoutRef.set(
+            {
+              status: "checkout_failed",
+              updatedAt: Timestamp.now(),
+            },
+            { merge: true },
+          );
+
+          throw error;
+        }
+      }
 
       await checkoutRef.set({
         email,
         emailHash: emailHash(email),
         plan,
         market: "IN",
-        provider: providerForMarket("IN"),
+        provider: "razorpay",
         environment: PAYMENT_ENVIRONMENT,
         status: "created",
-        amount: requestedAmountPaise,
+        amount: requestedMinor,
         currency: "INR",
         createdAt: Timestamp.now(),
       });
@@ -324,7 +504,7 @@ export const createPremiumCheckout = onRequest(
           checkoutRef.id,
           email,
           plan,
-          requestedAmountPaise,
+          requestedMinor,
         );
 
       await checkoutRef.set(
@@ -353,7 +533,6 @@ export const createPremiumCheckout = onRequest(
     }
   },
 );
-
 export const razorpayCheckout = onRequest(
   {
     region: REGION,
@@ -633,6 +812,11 @@ export const premiumStatus = onRequest(
         return;
       }
 
+      const validationToken =
+        await issueEntitlementValidationToken(
+          String(data.email ?? ""),
+        );
+
       res.json({
         status: "active",
         email: data.email,
@@ -640,6 +824,7 @@ export const premiumStatus = onRequest(
           data.expiresAt.toDate().toISOString(),
         restoreCode:
           data.restoreCode ?? "",
+        validationToken,
       });
     } catch (error) {
       console.error(error);
@@ -682,7 +867,7 @@ export const restorePremium = onRequest(
 
       const snap =
         await db.collection("premiumEntitlements")
-          .doc(emailHash(email))
+          .doc(entitlementDocId(email))
           .get();
 
       if (!snap.exists) {

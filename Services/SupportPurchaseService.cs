@@ -38,6 +38,24 @@ public static class SupportPurchaseService
 
     public static string GetMarketCode()
     {
+#if DEBUG
+        var testMarket =
+            Environment.GetEnvironmentVariable(
+                "LUCKYDANGLE_TEST_MARKET");
+
+        if (string.Equals(
+                testMarket,
+                "IN",
+                StringComparison.OrdinalIgnoreCase))
+            return "IN";
+
+        if (string.Equals(
+                testMarket,
+                "INTL",
+                StringComparison.OrdinalIgnoreCase))
+            return "INTL";
+#endif
+
         try
         {
             return string.Equals(

@@ -1,4 +1,5 @@
 import { onRequest } from "firebase-functions/v2/https";
+import { issueEntitlementValidationToken } from "./entitlementValidation";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
@@ -215,11 +216,15 @@ export const verifyRestoreOtp = onRequest(
       verifiedAt: Timestamp.now(),
     });
 
+    const validationToken =
+      await issueEntitlementValidationToken(email);
+
     res.json({
       status: "active",
       email,
       expiresAtUtc: premiumExpiry.toISOString(),
       restoreCode: "",
+      validationToken,
     });
   },
 );

@@ -4,6 +4,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendCoffeeThankYouEmail } from "./email";
+import { getRuntimeConfig } from "./runtimeConfig";
 
 if (getApps().length === 0) initializeApp();
 
@@ -14,6 +15,7 @@ const BASE_URL =
 
 const RAZORPAY_KEY_ID = defineSecret("RAZORPAY_KEY_ID");
 const RAZORPAY_KEY_SECRET = defineSecret("RAZORPAY_KEY_SECRET");
+const DODO_PAYMENTS_API_KEY = defineSecret("DODO_PAYMENTS_API_KEY");
 
 const PAYMENT_ENVIRONMENT =
   String(process.env.PAYMENT_ENVIRONMENT ?? "test")
@@ -88,12 +90,76 @@ async function createRazorpayOrder(
   return await response.json() as { id: string };
 }
 
+async function createDodoCoffeeCheckout(
+  checkoutId: string,
+  email: string,
+  amountCents: number,
+  productId: string,
+) {
+  const response = await fetch(
+    "https://test.dodopayments.com/checkouts",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${DODO_PAYMENTS_API_KEY.value()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        product_cart: [
+          {
+            product_id: productId,
+            quantity: 1,
+            amount: amountCents,
+          },
+        ],
+        customer: {
+          email,
+          name: "Lucky Dangle Supporter",
+        },
+        billing_currency: "USD",
+        feature_flags: {
+          allow_customer_editing_email: false,
+          allow_currency_selection: false,
+        },
+        metadata: {
+          product: "lucky_dangle",
+          type: "coffee",
+          checkout_id: checkoutId,
+          email_hash: emailHash(email),
+          environment: PAYMENT_ENVIRONMENT,
+        },
+        return_url:
+          `${BASE_URL}/coffeeReturn?checkoutId=` +
+          encodeURIComponent(checkoutId),
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    console.error("Dodo Coffee checkout error", detail);
+    throw new Error("Dodo coffee checkout creation failed.");
+  }
+
+  const result = await response.json() as {
+    session_id: string;
+    checkout_url: string | null;
+    payment_id?: string | null;
+  };
+
+  if (!result.session_id || !result.checkout_url) {
+    throw new Error("Dodo returned an invalid Coffee checkout session.");
+  }
+
+  return result;
+}
 export const createCoffeeCheckout = onRequest(
   {
     region: REGION,
     secrets: [
       RAZORPAY_KEY_ID,
       RAZORPAY_KEY_SECRET,
+      DODO_PAYMENTS_API_KEY,
     ],
   },
   async (req, res) => {
@@ -118,10 +184,20 @@ export const createCoffeeCheckout = onRequest(
 
       const requestedAmount =
         Number(req.body?.amount ?? 0);
+      const runtimeConfig = await getRuntimeConfig();
+      const coffeeConfig = runtimeConfig.coffee;
+      const providerConfig = runtimeConfig.providers;
 
       if (!isValidEmail(email)) {
         res.status(400).json({
           error: "Valid email required.",
+        });
+        return;
+      }
+
+      if (market === "IN" && !providerConfig.razorpayEnabled) {
+        res.status(503).json({
+          error: "Coffee payments are temporarily unavailable.",
         });
         return;
       }
@@ -132,12 +208,12 @@ export const createCoffeeCheckout = onRequest(
 
         if (
           !Number.isFinite(amountPaise) ||
-          amountPaise < INDIA_MIN_PAISE ||
-          amountPaise > INDIA_MAX_PAISE
+          amountPaise < coffeeConfig.indiaMin * 100 ||
+          amountPaise > coffeeConfig.indiaMax * 100
         ) {
           res.status(400).json({
             error:
-              "Coffee contribution must be between INR 100 and INR 5,000.",
+              `Coffee contribution must be between INR ${coffeeConfig.indiaMin} and INR ${coffeeConfig.indiaMax}.`,
           });
           return;
         }
@@ -186,21 +262,86 @@ export const createCoffeeCheckout = onRequest(
 
       if (
         !Number.isFinite(amountCents) ||
-        amountCents < INTL_MIN_CENTS ||
-        amountCents > INTL_MAX_CENTS
+        amountCents < coffeeConfig.internationalMin * 100 ||
+        amountCents > coffeeConfig.internationalMax * 100
       ) {
         res.status(400).json({
           error:
-            "Coffee contribution must be between USD 3 and USD 100.",
+            `Coffee contribution must be between USD ${coffeeConfig.internationalMin} and USD ${coffeeConfig.internationalMax}.`,
         });
         return;
       }
 
-      // Dodo adapter plugs in here later. The WPF client remains unchanged.
-      res.status(503).json({
-        error:
-          "International coffee payments are temporarily unavailable while Dodo approval is pending.",
+      if (!providerConfig.dodoEnabled) {
+        res.status(503).json({
+          error:
+            "International coffee payments are temporarily unavailable.",
+        });
+        return;
+      }
+
+      const productId =
+        providerConfig.dodoCoffeeProductId;
+
+      if (!productId) {
+        res.status(503).json({
+          error: "Dodo Coffee product is not configured.",
+        });
+        return;
+      }
+
+      const checkoutRef =
+        db.collection("supportCheckouts").doc();
+
+      await checkoutRef.set({
+        type: "coffee",
+        email,
+        emailHash: emailHash(email),
+        market: "INTL",
+        provider: "dodo",
+        environment: PAYMENT_ENVIRONMENT,
+        status: "created",
+        amount: amountCents,
+        currency: "USD",
+        providerProductId: productId,
+        createdAt: Timestamp.now(),
       });
+
+      try {
+        const session =
+          await createDodoCoffeeCheckout(
+            checkoutRef.id,
+            email,
+            amountCents,
+            productId,
+          );
+
+        await checkoutRef.set(
+          {
+            providerOrderId: session.session_id,
+            providerPaymentId:
+              session.payment_id ?? null,
+          },
+          { merge: true },
+        );
+
+        res.json({
+          checkoutId: checkoutRef.id,
+          checkoutUrl: session.checkout_url,
+          provider: "dodo",
+        });
+        return;
+      } catch (error) {
+        await checkoutRef.set(
+          {
+            status: "checkout_failed",
+            updatedAt: Timestamp.now(),
+          },
+          { merge: true },
+        );
+
+        throw error;
+      }
     } catch (error) {
       console.error(error);
 
@@ -413,12 +554,19 @@ export const coffeeRazorpayVerify = onRequest(
         .update(`${returnedOrderId}|${paymentId}`)
         .digest("hex");
 
-      if (
-        !crypto.timingSafeEqual(
-          Buffer.from(expected, "utf8"),
-          Buffer.from(signature, "utf8"),
-        )
-      ) {
+      const expectedBuffer =
+        Buffer.from(expected, "utf8");
+      const signatureBuffer =
+        Buffer.from(signature, "utf8");
+
+      const validSignature =
+        expectedBuffer.length === signatureBuffer.length &&
+        crypto.timingSafeEqual(
+          expectedBuffer,
+          signatureBuffer,
+        );
+
+      if (!validSignature) {
         res.status(400).json({
           error: "Payment signature verification failed.",
         });
@@ -486,6 +634,81 @@ export const coffeeRazorpayVerify = onRequest(
             : "Payment verification failed.",
       });
     }
+  },
+);
+export const coffeeReturn = onRequest(
+  { region: REGION },
+  async (req, res) => {
+    const checkoutId =
+      String(req.query.checkoutId ?? "").trim();
+
+    let status = "processing";
+
+    if (checkoutId) {
+      const snap =
+        await db.collection("supportCheckouts")
+          .doc(checkoutId)
+          .get();
+
+      if (
+        snap.exists &&
+        snap.data()?.type === "coffee"
+      ) {
+        status =
+          String(
+            snap.data()?.status ?? "processing",
+          );
+      }
+    }
+
+    const message =
+      status === "paid"
+        ? "Payment confirmed. Thank you for supporting Lucky Dangle."
+        : "Payment received. Lucky Dangle is verifying it now.";
+
+    const html = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lucky Dangle - Thank You</title>
+<style>
+body{
+  font-family:Segoe UI,Arial,sans-serif;
+  background:#151822;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  margin:0;
+}
+.card{
+  width:min(620px,88vw);
+  background:#1d202b;
+  border:1px solid #5a4926;
+  border-radius:24px;
+  padding:42px;
+  text-align:center;
+}
+h1{margin:0 0 16px}
+p{color:#d7dbea;font-size:18px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Thank you!</h1>
+<p>${message}</p>
+<p>You can return to Lucky Dangle and close this browser tab.</p>
+</div>
+</body>
+</html>`;
+
+    res.set(
+      "Content-Type",
+      "text/html; charset=utf-8",
+    );
+    res.status(200).send(html);
   },
 );
 export const coffeeStatus = onRequest(

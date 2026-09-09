@@ -13,3 +13,8 @@ export const health = onRequest(
 export * from "./premium";
 export * from "./restoreOtp";
 export * from "./support";
+export * from "./runtimeConfig";
+export * from "./purchaseOtp";
+export * from "./entitlementValidation";
+export * from "./mailTemplateInitializer";
+export * from "./dodoWebhook";

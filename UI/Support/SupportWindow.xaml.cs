@@ -35,7 +35,7 @@ public partial class SupportWindow : Window
         {
             _minimumAmount = 100m;
             _maximumAmount = 5000m;
-            _selectedAmount = 100m;
+            _selectedAmount = 200m;
 
             MarketText.Text =
                 "India payment via Razorpay";
@@ -52,7 +52,7 @@ public partial class SupportWindow : Window
             AmountHelpText.Text =
                 "Or enter another amount (INR 100 - INR 5,000)";
 
-            CustomAmountTextBox.Text = "100";
+            CustomAmountTextBox.Text = "200";
         }
         else
         {
@@ -88,6 +88,18 @@ public partial class SupportWindow : Window
         object sender,
         RoutedEventArgs e)
     {
+        try
+        {
+            var config =
+                await RuntimeConfigService.GetAsync();
+
+            ApplyCoffeeRuntimeConfig(config);
+        }
+        catch
+        {
+            // Keep safe local defaults if remote config is unavailable.
+        }
+
         var pending =
             PendingCoffeeCheckoutStore.LoadRecent();
 
@@ -142,6 +154,92 @@ public partial class SupportWindow : Window
         StatusText.Text = "";
     }
 
+    private void ApplyCoffeeRuntimeConfig(
+        LuckyDanglePublicConfig config)
+    {
+        var presets =
+            _isIndia
+                ? config.Coffee.IndiaPresets
+                : config.Coffee.InternationalPresets;
+
+        if (presets is null || presets.Length < 3)
+        {
+            presets =
+                _isIndia
+                    ? [100m, 150m, 200m]
+                    : [3m, 5m, 10m];
+        }
+
+        _minimumAmount =
+            _isIndia ? config.Coffee.IndiaMin : config.Coffee.InternationalMin;
+
+        _maximumAmount =
+            _isIndia ? config.Coffee.IndiaMax : config.Coffee.InternationalMax;
+
+        var defaultAmount =
+            _isIndia
+                ? config.Coffee.IndiaDefault
+                : config.Coffee.InternationalDefault;
+
+        if (defaultAmount < _minimumAmount ||
+            defaultAmount > _maximumAmount)
+        {
+            defaultAmount = _minimumAmount;
+        }
+
+        Preset1Button.Content =
+            _isIndia
+                ? $"INR {presets[0]:0.##}"
+                : $"USD {presets[0]:0.##}";
+        Preset1Button.Tag =
+            presets[0].ToString(
+                CultureInfo.InvariantCulture);
+
+        Preset2Button.Content =
+            _isIndia
+                ? $"INR {presets[1]:0.##}"
+                : $"USD {presets[1]:0.##}";
+        Preset2Button.Tag =
+            presets[1].ToString(
+                CultureInfo.InvariantCulture);
+
+        Preset3Button.Content =
+            _isIndia
+                ? $"INR {presets[2]:0.##}"
+                : $"USD {presets[2]:0.##}";
+        Preset3Button.Tag =
+            presets[2].ToString(
+                CultureInfo.InvariantCulture);
+
+        AmountHelpText.Text =
+            _isIndia
+                ? $"Or enter another amount (INR {_minimumAmount:0.##} - INR {_maximumAmount:N0})"
+                : $"Or enter another amount (USD {_minimumAmount:0.##} - USD {_maximumAmount:0.##})";
+
+        _selectedAmount = defaultAmount;
+
+        _updatingAmount = true;
+        CustomAmountTextBox.Text =
+            defaultAmount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
+        _updatingAmount = false;
+
+        var providerEnabled =
+            _isIndia
+                ? config.Providers.RazorpayEnabled
+                : config.Providers.DodoEnabled;
+
+        PayButton.IsEnabled = providerEnabled;
+
+        if (!providerEnabled)
+        {
+            StatusText.Text =
+                "Coffee payments are temporarily unavailable.";
+        }
+
+        UpdatePayButton();
+    }
     private void SupportWindow_Closed(
         object? sender,
         EventArgs e)

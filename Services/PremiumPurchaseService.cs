@@ -13,12 +13,20 @@ public sealed class PremiumCheckoutResponse
     public string Provider { get; set; } = "";
 }
 
+public sealed class PremiumPurchaseOtpVerificationResponse
+{
+    public bool Ok { get; set; }
+    public string Email { get; set; } = "";
+    public string VerificationToken { get; set; } = "";
+    public DateTime? ExpiresAtUtc { get; set; }
+}
 public sealed class PremiumStatusResponse
 {
     public string Status { get; set; } = "";
     public string Email { get; set; } = "";
     public DateTime? ExpiresAtUtc { get; set; }
     public string RestoreCode { get; set; } = "";
+    public string ValidationToken { get; set; } = "";
 
     public bool IsActive =>
         string.Equals(Status, "active",
@@ -39,6 +47,24 @@ public static class PremiumPurchaseService
 
     public static string GetMarketCode()
     {
+#if DEBUG
+        var testMarket =
+            Environment.GetEnvironmentVariable(
+                "LUCKYDANGLE_TEST_MARKET");
+
+        if (string.Equals(
+                testMarket,
+                "IN",
+                StringComparison.OrdinalIgnoreCase))
+            return "IN";
+
+        if (string.Equals(
+                testMarket,
+                "INTL",
+                StringComparison.OrdinalIgnoreCase))
+            return "INTL";
+#endif
+
         try
         {
             return string.Equals(
@@ -54,13 +80,19 @@ public static class PremiumPurchaseService
         }
     }
 
-    public static async Task<PremiumCheckoutResponse> CreateCheckoutAsync(string email, string plan, decimal amount, CancellationToken cancellationToken = default)
+    public static async Task<PremiumCheckoutResponse> CreateCheckoutAsync(
+        string email,
+        string plan,
+        decimal amount,
+        string verificationToken,
+        CancellationToken cancellationToken = default)
     {
         var body = new
         {
             email = email.Trim(),
             plan,
             amount,
+            verificationToken,
             market = GetMarketCode()
         };
 
@@ -114,6 +146,97 @@ public static class PremiumPurchaseService
                ?? new PremiumStatusResponse();
     }
 
+    public static async Task SendPurchaseOtpAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            email = email.Trim()
+        };
+
+        using var response = await Http.PostAsJsonAsync(
+            $"{BackendBaseUrl}/sendPremiumPurchaseOtp",
+            body,
+            cancellationToken);
+
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                ExtractError(
+                    raw,
+                    "Unable to send verification code."));
+    }
+
+    public static async Task<PremiumPurchaseOtpVerificationResponse>
+        VerifyPurchaseOtpAsync(
+            string email,
+            string code,
+            CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            email = email.Trim(),
+            code = code.Trim()
+        };
+
+        using var response = await Http.PostAsJsonAsync(
+            $"{BackendBaseUrl}/verifyPremiumPurchaseOtp",
+            body,
+            cancellationToken);
+
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                ExtractError(
+                    raw,
+                    "Unable to verify email."));
+
+        return
+            JsonSerializer.Deserialize<
+                PremiumPurchaseOtpVerificationResponse>(
+                raw,
+                JsonOptions())
+            ?? new PremiumPurchaseOtpVerificationResponse();
+    }
+    public static async Task<PremiumStatusResponse>
+        RevalidateEntitlementAsync(
+            string email,
+            string validationToken,
+            CancellationToken cancellationToken = default)
+    {
+        var body = new
+        {
+            email = email.Trim(),
+            validationToken
+        };
+
+        using var response = await Http.PostAsJsonAsync(
+            $"{BackendBaseUrl}/revalidatePremiumEntitlement",
+            body,
+            cancellationToken);
+
+        var raw =
+            await response.Content.ReadAsStringAsync(
+                cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            throw new InvalidOperationException(
+                ExtractError(
+                    raw,
+                    "Unable to validate Premium entitlement."));
+
+        return JsonSerializer.Deserialize<PremiumStatusResponse>(
+                   raw,
+                   JsonOptions())
+               ?? new PremiumStatusResponse();
+    }
     public static async Task SendRestoreOtpAsync(
         string email,
         CancellationToken cancellationToken = default)

@@ -8,6 +8,8 @@ public sealed class PremiumEntitlementSnapshot
     public string Email { get; set; } = "";
     public DateTime ExpiresAtUtc { get; set; }
     public string RestoreCode { get; set; } = "";
+    public string ValidationToken { get; set; } = "";
+    public DateTime? LastServerValidationAtUtc { get; set; }
 
     public bool IsActive =>
         ExpiresAtUtc > DateTime.UtcNow;

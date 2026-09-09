@@ -108,18 +108,59 @@
           <TextBlock x:Name="AmountHintText" Text="Minimum &#x20B9;199. You may contribute more if you wish." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
           <TextBlock Text="Email" Margin="2,11,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
           <TextBox x:Name="EmailTextBox" Height="42" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
+                <StackPanel Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="SendPurchaseOtpButton"
+                                Content="SEND VERIFICATION CODE"
+                                Width="180"
+                                Height="32"
+                                Click="SendPurchaseOtp_Click"/>
+                        <TextBox x:Name="PurchaseOtpTextBox"
+                                 Width="90"
+                                 Height="32"
+                                 Margin="10,0,0,0"
+                                 MaxLength="6"
+                                 VerticalContentAlignment="Center"
+                                 IsEnabled="False"/>
+                        <Button x:Name="VerifyPurchaseOtpButton"
+                                Content="VERIFY"
+                                Width="80"
+                                Height="32"
+                                Margin="10,0,0,0"
+                                Click="VerifyPurchaseOtp_Click"
+                                IsEnabled="False"/>
+                    </StackPanel>
+                    <TextBlock x:Name="PurchaseOtpInfoText"
+                               Margin="0,6,0,0"
+                               TextWrapping="Wrap"
+                               Foreground="#BFC3CC"
+                               FontSize="11"/>
+                </StackPanel>
           <TextBlock x:Name="StatusText" Margin="2,7,2,0" TextWrapping="Wrap" Foreground="#AEB4C3" FontSize="11.5" />
           <Button x:Name="UnlockButton" Content="Unlock Premium" Margin="0,12,0,0" Style="{StaticResource PrimaryButton}" Click="Unlock_Click" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
             <TextBlock Text="Already purchased?" Foreground="#8F96A6" VerticalAlignment="Center" FontSize="12" />
             <Button Content="Have a license?" Margin="3,0,0,0" Style="{StaticResource LinkButton}" Click="Restore_Click" />
-          </StackPanel>          <TextBlock Text="Refund Policy: Premium payments are generally non-refundable. Please verify your plan, email and amount before paying."
+          </StackPanel>                    <TextBlock x:Name="RefundPolicyText"
+                     Text="Refund Policy: Premium payments are generally non-refundable."
                      Margin="8,8,8,0"
                      TextWrapping="Wrap"
                      TextAlignment="Center"
                      Foreground="#C9A85A"
                      FontSize="10.5"
                      FontWeight="SemiBold" />
+          <TextBlock x:Name="PrivacyUrlText"
+                     Margin="8,4,8,0"
+                     TextWrapping="Wrap"
+                     TextAlignment="Center"
+                     Foreground="#8F96A6"
+                     FontSize="10.5" />
+          <TextBlock x:Name="SupportEmailText"
+                     Margin="8,2,8,0"
+                     TextWrapping="Wrap"
+                     TextAlignment="Center"
+                     Foreground="#8F96A6"
+                     FontSize="10.5" />
         </StackPanel>
         <!-- Clean post-payment state -->
         <StackPanel x:Name="SuccessPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Stretch">

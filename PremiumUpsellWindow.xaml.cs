@@ -14,6 +14,10 @@ public partial class PremiumUpsellWindow : Window
     private readonly Dictionary<Window, WindowState> previousWindowStates = new();
     private bool browserModeActive;
     private bool normalizingAmountText;
+    private PremiumRuntimeConfig premiumConfig = new();
+    private ProviderRuntimeConfig providerConfig = new();
+    private string purchaseVerificationToken = "";
+    private string verifiedPurchaseEmail = "";
 
     public PremiumUpsellWindow()
     {
@@ -38,24 +42,29 @@ public partial class PremiumUpsellWindow : Window
 
     private decimal MinimumAmount =>
         YearPlan.IsChecked == true
-            ? (IsIndia ? 299m : 9m)
-            : (IsIndia ? 199m : 6m);
+            ? (IsIndia
+                ? premiumConfig.India12mMin
+                : premiumConfig.International12mMin)
+            : (IsIndia
+                ? premiumConfig.India6mMin
+                : premiumConfig.International6mMin);
 
-    
     private decimal MaximumAmount =>
-        IsIndia ? 19999m : 200m;
+        IsIndia
+            ? premiumConfig.IndiaMax
+            : premiumConfig.InternationalMax;
 private void ApplyMarketPricing()
     {
         if (IsIndia)
         {
-            SixMonthPriceText.Text = "Minimum \u20B9199";
-            YearPriceText.Text = "Minimum \u20B9299";
+            SixMonthPriceText.Text = $"Minimum \u20B9{premiumConfig.India6mMin:0.##}";
+            YearPriceText.Text = $"Minimum \u20B9{premiumConfig.India12mMin:0.##}";
             CurrencyText.Text = "\u20B9";
         }
         else
         {
-            SixMonthPriceText.Text = "Minimum $6";
-            YearPriceText.Text = "Minimum $9";
+            SixMonthPriceText.Text = $"Minimum ${premiumConfig.International6mMin:0.##}";
+            YearPriceText.Text = $"Minimum ${premiumConfig.International12mMin:0.##}";
             CurrencyText.Text = "$";
         }
 
@@ -87,6 +96,47 @@ private void ApplyMarketPricing()
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
+        try
+        {
+            var runtimeConfig =
+                await RuntimeConfigService.GetAsync();
+
+            premiumConfig = runtimeConfig.Premium;
+            providerConfig = runtimeConfig.Providers;
+
+            RefundPolicyText.Text =
+                "Refund Policy: " +
+                runtimeConfig.RefundPolicyText;
+
+            PrivacyUrlText.Text =
+                "Privacy: " +
+                runtimeConfig.PrivacyUrl;
+
+            SupportEmailText.Text =
+                "Support: " +
+                runtimeConfig.SupportEmail;
+            ApplyMarketPricing();
+
+            var providerEnabled =
+                IsIndia
+                    ? providerConfig.RazorpayEnabled
+                    : providerConfig.DodoEnabled;
+
+            if (!providerEnabled)
+            {
+                UnlockButton.IsEnabled = false;
+                SetStatus(
+                    IsIndia
+                        ? "Premium payments are temporarily unavailable."
+                        : "International Premium payments are temporarily unavailable.",
+                    true);
+            }
+        }
+        catch
+        {
+            // Keep safe local defaults.
+        }
+
         var active = PremiumEntitlementStore.Load();
 
         if (active is not null &&
@@ -303,6 +353,111 @@ private void ApplyMarketPricing()
         return true;
     }
 
+    private async void SendPurchaseOtp_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var email = EmailTextBox.Text.Trim();
+
+        if (!IsValidEmail(email))
+        {
+            PurchaseOtpInfoText.Text =
+                "Please enter a valid email address.";
+            return;
+        }
+
+        try
+        {
+            SendPurchaseOtpButton.IsEnabled = false;
+            PurchaseOtpInfoText.Text =
+                "Sending verification code...";
+
+            await PremiumPurchaseService.SendPurchaseOtpAsync(
+                email);
+
+            PurchaseOtpTextBox.IsEnabled = true;
+            VerifyPurchaseOtpButton.IsEnabled = true;
+
+            PurchaseOtpInfoText.Text =
+                "A 6-digit code was sent to this email. " +
+                "It is valid for 10 minutes.";
+        }
+        catch (Exception ex)
+        {
+            PurchaseOtpInfoText.Text = ex.Message;
+        }
+        finally
+        {
+            if (string.IsNullOrWhiteSpace(
+                    purchaseVerificationToken))
+            {
+                SendPurchaseOtpButton.IsEnabled = true;
+            }
+        }
+    }
+
+    private async void VerifyPurchaseOtp_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        var email = EmailTextBox.Text.Trim();
+        var code = PurchaseOtpTextBox.Text.Trim();
+
+        if (!IsValidEmail(email))
+        {
+            PurchaseOtpInfoText.Text =
+                "Please enter a valid email address.";
+            return;
+        }
+
+        if (code.Length != 6 ||
+            !code.All(char.IsDigit))
+        {
+            PurchaseOtpInfoText.Text =
+                "Enter the 6-digit verification code.";
+            return;
+        }
+
+        try
+        {
+            VerifyPurchaseOtpButton.IsEnabled = false;
+            PurchaseOtpInfoText.Text = "Verifying...";
+
+            var result =
+                await PremiumPurchaseService
+                    .VerifyPurchaseOtpAsync(
+                        email,
+                        code);
+
+            if (!result.Ok ||
+                string.IsNullOrWhiteSpace(
+                    result.VerificationToken))
+            {
+                PurchaseOtpInfoText.Text =
+                    "Email verification failed.";
+                VerifyPurchaseOtpButton.IsEnabled = true;
+                return;
+            }
+
+            purchaseVerificationToken =
+                result.VerificationToken;
+            verifiedPurchaseEmail =
+                email.Trim().ToLowerInvariant();
+
+            EmailTextBox.IsReadOnly = true;
+            PurchaseOtpTextBox.IsEnabled = false;
+            SendPurchaseOtpButton.IsEnabled = false;
+            VerifyPurchaseOtpButton.IsEnabled = false;
+
+            PurchaseOtpInfoText.Text =
+                "Email verified. You can now continue to payment.";
+        }
+        catch (Exception ex)
+        {
+            PurchaseOtpInfoText.Text = ex.Message;
+            VerifyPurchaseOtpButton.IsEnabled = true;
+        }
+    }
     private async void Unlock_Click(
         object sender,
         RoutedEventArgs e)
@@ -313,6 +468,19 @@ private void ApplyMarketPricing()
         {
             SetStatus(
                 "Please enter a valid email address.",
+                true);
+            return;
+        }
+        if (
+            string.IsNullOrWhiteSpace(
+                purchaseVerificationToken) ||
+            !string.Equals(
+                verifiedPurchaseEmail,
+                email.Trim().ToLowerInvariant(),
+                StringComparison.Ordinal))
+        {
+            SetStatus(
+                "Please verify this email before payment.",
                 true);
             return;
         }
@@ -338,6 +506,7 @@ private void ApplyMarketPricing()
                     email,
                     plan,
                     amount,
+                    purchaseVerificationToken,
                     pollCts.Token);
 
             PendingPremiumCheckoutStore.Save(
@@ -414,7 +583,9 @@ private void ApplyMarketPricing()
             {
                 Email = status.Email,
                 ExpiresAtUtc = status.ExpiresAtUtc.Value,
-                RestoreCode = status.RestoreCode
+                RestoreCode = status.RestoreCode,
+                ValidationToken = status.ValidationToken,
+                LastServerValidationAtUtc = DateTime.UtcNow
             };
 
         DangleAccessService.ApplyPremiumEntitlement(
@@ -649,7 +820,8 @@ private void ApplyMarketPricing()
     private void SetBusy(bool busy)
     {
         UnlockButton.IsEnabled = !busy;
-        EmailTextBox.IsEnabled = !busy;
+        EmailTextBox.IsEnabled = !busy;        if (!string.IsNullOrWhiteSpace(purchaseVerificationToken))
+            EmailTextBox.IsReadOnly = true;
         AmountTextBox.IsEnabled = !busy;
         SixMonthPlan.IsEnabled = !busy;
         YearPlan.IsEnabled = !busy;

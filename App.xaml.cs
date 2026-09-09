@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Windows;
+using LuckyDangle.Services;
 
 namespace LuckyDangle;
 
@@ -37,6 +38,7 @@ public partial class App : Application
             MainWindow = window;
 
             window.Show();
+            _ = DangleAccessService.RevalidateIfDueAsync();
         }
         catch (Exception ex)
         {
