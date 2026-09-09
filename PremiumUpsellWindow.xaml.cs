@@ -169,8 +169,31 @@ private void ApplyMarketPricing()
             }
             else
             {
-                SetStatus(
-                    "A previous checkout is still pending.");
+                var priorState =
+                    status.Status?.Trim().ToLowerInvariant() ?? "";
+
+                if (
+                    priorState == "failed" ||
+                    priorState == "checkout_failed")
+                {
+                    PendingPremiumCheckoutStore.Clear();
+                    SetStatus(
+                        "Your previous payment was not completed. You can try again.",
+                        true);
+                }
+                else if (
+                    priorState == "cancelled" ||
+                    priorState == "canceled")
+                {
+                    PendingPremiumCheckoutStore.Clear();
+                    SetStatus(
+                        "Your previous payment was cancelled. You can start a new payment when ready.");
+                }
+                else
+                {
+                    SetStatus(
+                        "Your previous payment has not been confirmed yet. You can try again or check later.");
+                }
             }
         }
         catch
@@ -528,7 +551,7 @@ private void ApplyMarketPricing()
                 "Complete payment securely in your browser. " +
                 "Lucky Dangle will detect it automatically.");
 
-            for (var attempt = 0; attempt < 160; attempt++)
+            for (var attempt = 0; attempt < 30; attempt++)
             {
                 await Task.Delay(
                     TimeSpan.FromSeconds(3),
@@ -538,22 +561,43 @@ private void ApplyMarketPricing()
                     await PremiumPurchaseService.GetStatusAsync(
                         checkout.CheckoutId,
                         pollCts.Token);
+                if (status.IsActive)
+                {
+                    PendingPremiumCheckoutStore.Clear();
+                    ApplySuccessfulEntitlement(status);
+                    RestoreAfterBrowserCheckout();
+                    return;
+                }
 
-                if (!status.IsActive)
-                    continue;
+                var paymentState =
+                    status.Status?.Trim().ToLowerInvariant() ?? "";
 
-                PendingPremiumCheckoutStore.Clear();
+                if (
+                    paymentState == "failed" ||
+                    paymentState == "checkout_failed" ||
+                    paymentState == "cancelled" ||
+                    paymentState == "canceled")
+                {
+                    PendingPremiumCheckoutStore.Clear();
+                    RestoreAfterBrowserCheckout();
 
-                ApplySuccessfulEntitlement(status);
-                RestoreAfterBrowserCheckout();
-                return;
+                    SetStatus(
+                        paymentState == "failed" ||
+                        paymentState == "checkout_failed"
+                            ? "Payment was not completed. No charge was confirmed. You can try again."
+                            : "Payment was cancelled. You can try again whenever you are ready.",
+                        paymentState != "cancelled" &&
+                        paymentState != "canceled");
+
+                    return;
+                }
             }
 
             RestoreAfterBrowserCheckout();
 
             SetStatus(
-                "Payment is still pending. " +
-                "You can close this window and check again later.");
+                "Payment has not been confirmed yet. " +
+                "You can retry payment or check again later.");
         }
         catch (OperationCanceledException)
         {
@@ -745,7 +789,6 @@ private void ApplyMarketPricing()
         DialogResult = true;
         Close();
     }
-
     private void PrepareForBrowserCheckout()
     {
         if (browserModeActive)
@@ -753,20 +796,15 @@ private void ApplyMarketPricing()
 
         browserModeActive = true;
         previousTopmost.Clear();
-        previousWindowStates.Clear();
 
+        // Keep Lucky Dangle visible while the browser handles payment.
         foreach (Window window in Application.Current.Windows)
         {
             if (!window.IsVisible)
                 continue;
 
             previousTopmost[window] = window.Topmost;
-            previousWindowStates[window] = window.WindowState;
-
             window.Topmost = false;
-
-            if (window == this || window == Owner)
-                window.WindowState = WindowState.Minimized;
         }
     }
 
@@ -776,23 +814,6 @@ private void ApplyMarketPricing()
             return;
 
         browserModeActive = false;
-
-        foreach (var pair in previousWindowStates)
-        {
-            try
-            {
-                if (!pair.Key.IsLoaded)
-                    continue;
-
-                pair.Key.WindowState =
-                    pair.Value == WindowState.Minimized
-                        ? WindowState.Normal
-                        : pair.Value;
-            }
-            catch
-            {
-            }
-        }
 
         foreach (var pair in previousTopmost)
         {
@@ -806,15 +827,10 @@ private void ApplyMarketPricing()
             }
         }
 
-        previousWindowStates.Clear();
         previousTopmost.Clear();
 
         if (IsLoaded)
-        {
-            WindowState = WindowState.Normal;
             Show();
-            Activate();
-        }
     }
 
     private void SetBusy(bool busy)

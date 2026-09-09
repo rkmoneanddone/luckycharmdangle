@@ -441,17 +441,29 @@ public partial class MainWindow : Window
     object sender,
     RoutedEventArgs e)
     {
+        bool previousTopmost = Topmost;
+        Topmost = false;
+
         var picker =
             new CharmPickerWindow(currentDangle)
             {
                 Owner = this,
+                Topmost = false,
                 WindowStartupLocation =
                     WindowStartupLocation.CenterScreen
             };
 
-        var pickerResult = picker.ShowDialog();
+        bool? pickerResult;
 
-        ApplyDisplayMode();
+        try
+        {
+            pickerResult = picker.ShowDialog();
+        }
+        finally
+        {
+            Topmost = previousTopmost;
+            ApplyDisplayMode();
+        }
 
         if (pickerResult == true)
         {

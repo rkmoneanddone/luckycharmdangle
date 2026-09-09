@@ -628,6 +628,26 @@ const options = {
   theme: {
     color: "#FFC857"
   },
+  modal: {
+    ondismiss: async function () {
+      try {
+        await fetch(
+          ${JSON.stringify(`${BASE_URL}/markPremiumCheckoutState`)},
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              checkoutId: ${JSON.stringify(checkoutId)},
+              state: "cancelled"
+            })
+          }
+        );
+      } catch (_) {}
+
+      document.getElementById("status").textContent =
+        "Payment cancelled. You can return to Lucky Dangle.";
+    }
+  },
   handler: async function (r) {
     document.getElementById("status").textContent =
       "Verifying payment...";
@@ -663,6 +683,12 @@ const options = {
 };
 
 const rzp = new Razorpay(options);
+
+
+rzp.on("payment.failed", function () {
+  document.getElementById("status").textContent =
+    "Payment attempt failed. You can retry in Razorpay, or close the payment window to return to Lucky Dangle.";
+});
 
 document.getElementById("pay").onclick = () => rzp.open();
 
@@ -795,6 +821,56 @@ export const razorpayVerify = onRequest(
   },
 );
 
+export const markPremiumCheckoutState = onRequest(
+  { region: REGION },
+  async (req, res) => {
+    setCors(res);
+
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "POST required." });
+      return;
+    }
+
+    const checkoutId =
+      String(req.body?.checkoutId ?? "").trim();
+    const state =
+      String(req.body?.state ?? "").trim().toLowerCase();
+
+    if (
+      !checkoutId ||
+      state !== "cancelled"
+    ) {
+      res.status(400).json({ error: "Only cancelled state is accepted." });
+      return;
+    }
+
+    const ref =
+      db.collection("premiumCheckouts").doc(checkoutId);
+    const snap = await ref.get();
+
+    if (!snap.exists) {
+      res.status(404).json({ error: "Checkout not found." });
+      return;
+    }
+
+    if (String(snap.data()?.status ?? "") !== "paid") {
+      await ref.set(
+        {
+          status: state,
+          updatedAt: Timestamp.now(),
+        },
+        { merge: true },
+      );
+    }
+
+    res.json({ ok: true });
+  },
+);
 export const premiumStatus = onRequest(
   { region: REGION },
   async (req, res) => {

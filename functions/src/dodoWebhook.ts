@@ -129,6 +129,62 @@ export const dodoWebhook = onRequest(
       );
 
       if (eventType !== "payment.succeeded") {
+        const lowerEvent = eventType.toLowerCase();
+        const terminalState =
+          lowerEvent.includes("fail")
+            ? "failed"
+            : lowerEvent.includes("cancel")
+              ? "cancelled"
+              : "";
+
+        if (terminalState && checkoutId) {
+          const metadataType =
+            String(metadata?.type ?? "").trim().toLowerCase();
+
+          const collection =
+            metadataType === "premium"
+              ? "premiumCheckouts"
+              : metadataType === "coffee"
+                ? "supportCheckouts"
+                : "";
+
+          if (collection) {
+            const checkoutRef =
+              db.collection(collection).doc(checkoutId);
+            const checkoutSnap = await checkoutRef.get();
+
+            if (
+              checkoutSnap.exists &&
+              String(checkoutSnap.data()?.status ?? "") !== "paid"
+            ) {
+              await checkoutRef.set(
+                {
+                  status: terminalState,
+                  updatedAt: Timestamp.now(),
+                },
+                { merge: true },
+              );
+            }
+          }
+
+          await webhookEventRef.set(
+            {
+              status: "processed",
+              reason: `payment_${terminalState}`,
+              checkoutId,
+              updatedAt: Timestamp.now(),
+            },
+            { merge: true },
+          );
+
+          res.status(200).json({
+            received: true,
+            processed: true,
+            state: terminalState,
+          });
+          return;
+        }
+
         await webhookEventRef.set(
           {
             status: "ignored",

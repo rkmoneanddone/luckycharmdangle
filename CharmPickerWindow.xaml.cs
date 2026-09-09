@@ -161,6 +161,24 @@ public partial class CharmPickerWindow : Window
         RefreshDisplayModeButtons();
     }
 
+
+    private void Header_MouseLeftButtonDown(
+        object sender,
+        System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton !=
+            System.Windows.Input.MouseButton.Left)
+            return;
+
+        try
+        {
+            DragMove();
+        }
+        catch
+        {
+            // Mouse may be released while DragMove is active.
+        }
+    }
     private void BuildFilters()
     {
         FilterPanel.Children.Clear();

@@ -22,7 +22,6 @@ public partial class SupportWindow : Window
     private bool _updatingAmount;
     private CancellationTokenSource? _paymentPolling;
     private bool _paymentCompleted;
-    private WindowState? _ownerPreviousState;
 
     public SupportWindow()
     {
@@ -148,10 +147,11 @@ public partial class SupportWindow : Window
         {
         }
 
-        // A previous unpaid/abandoned checkout should not make the
-        // Coffee window look as if a payment page is currently open.
+        // A previous unpaid/abandoned checkout must never leave the
+        // Coffee UI looking stuck in a browser-waiting state.
         PendingCoffeeCheckoutStore.Clear();
-        StatusText.Text = "";
+        StatusText.Text =
+            "Your previous payment was not confirmed. You can start a new payment.";
     }
 
     private void ApplyCoffeeRuntimeConfig(
@@ -292,6 +292,28 @@ public partial class SupportWindow : Window
 
                         return;
                     }
+
+                    var paymentState =
+                        status.Status?.Trim().ToLowerInvariant() ?? "";
+
+                    if (
+                        paymentState == "failed" ||
+                        paymentState == "checkout_failed" ||
+                        paymentState == "cancelled" ||
+                        paymentState == "canceled")
+                    {
+                        PendingCoffeeCheckoutStore.Clear();
+
+                        StatusText.Text =
+                            paymentState == "failed" ||
+                            paymentState == "checkout_failed"
+                                ? "Payment was not completed. No charge was confirmed. You can try again."
+                                : "Payment was cancelled. You can try again whenever you are ready.";
+
+                        RestoreAfterBrowserPayment();
+                        PayButton.IsEnabled = true;
+                        return;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -309,7 +331,7 @@ public partial class SupportWindow : Window
             if (!token.IsCancellationRequested)
             {
                 StatusText.Text =
-                    "Payment was not confirmed yet. You can try again or close this window.";
+                    "Payment has not been confirmed yet. You can retry payment or check again later.";
                 RestoreAfterBrowserPayment();
             }
         }
@@ -319,26 +341,19 @@ public partial class SupportWindow : Window
     }
     private void MinimizeForBrowserPayment()
     {
+        // Keep the Coffee window and Control Panel visible.
         if (Owner != null)
-        {
-            _ownerPreviousState = Owner.WindowState;
-            Owner.WindowState = WindowState.Minimized;
-        }
+            Owner.Topmost = false;
 
-        WindowState = WindowState.Minimized;
+        Topmost = false;
     }
 
     private void RestoreAfterBrowserPayment()
     {
-        if (Owner != null && _ownerPreviousState.HasValue)
-        {
-            Owner.WindowState = _ownerPreviousState.Value;
-            _ownerPreviousState = null;
-        }
-
-        WindowState = WindowState.Normal;
-        Activate();
+        if (IsLoaded)
+            Show();
     }
+
     private void PresetAmount_Click(
         object sender,
         RoutedEventArgs e)
@@ -636,7 +651,7 @@ public partial class SupportWindow : Window
 
             await PollCheckoutAsync(
                 checkout.CheckoutId,
-                TimeSpan.FromMinutes(10));
+                TimeSpan.FromSeconds(90));
         }
         catch (Exception ex)
         {

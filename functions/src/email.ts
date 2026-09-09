@@ -55,6 +55,34 @@ Support: {{supportEmail}}
 
 {{signature}}`,
   },
+  premiumActivatedV2: {
+    enabled: true,
+    subject: "Lucky Dangle Premium is now active",
+    text:
+`Hello,
+
+Thank you for choosing Lucky Dangle Premium.
+
+Your Premium access has been activated successfully.
+
+PURCHASE DETAILS
+
+Plan: {{plan}}
+Amount paid: {{amount}}
+Payment reference: {{paymentId}}
+Premium access valid until: {{expiresAt}}
+
+You can now use all Premium Lucky Dangles included with your plan.
+
+Your Premium access is linked to the email address used during purchase. If you reinstall Lucky Dangle or move to another Windows PC, use Restore Premium in the app and verify the same email address.
+
+If you need help with your purchase or Premium access, contact:
+{{supportEmail}}
+
+Thank you for supporting Lucky Dangle.
+
+{{signature}}`,
+  },
   purchaseOtp: {
     enabled: true,
     subject: "Verify your email for Lucky Dangle Premium",
@@ -351,7 +379,7 @@ export async function sendPremiumActivatedEmail(input: {
       : "6 Months";
 
   await sendTemplate(
-    "premiumActivated",
+    "premiumActivatedV2",
     input.email,
     {
       plan: planText,
@@ -361,7 +389,16 @@ export async function sendPremiumActivatedEmail(input: {
           input.currency,
         ),
       paymentId: input.paymentId,
-      expiresAt: input.expiresAt.toUTCString(),
+      expiresAt:
+        input.expiresAt.toLocaleDateString(
+          "en-GB",
+          {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            timeZone: "UTC",
+          },
+        ),
     },
   );
 }
