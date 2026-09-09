@@ -1,4 +1,4 @@
-<Window x:Class="LuckyDangle.CharmPickerWindow"
+﻿<Window x:Class="LuckyDangle.CharmPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="900"
@@ -250,7 +250,7 @@
                             HorizontalAlignment="Left"
                             Margin="0">
 
-                    <!-- TITLE + SUBTITLE ΓÇö SAME LINE -->
+                    <!-- TITLE + SUBTITLE Î“Ã‡Ã¶ SAME LINE -->
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center">
 
@@ -433,7 +433,7 @@
                                         VerticalAlignment="Center">
 
                                 <TextBlock x:Name="CollectionIcon"
-                                           Text="≡ƒî╕"
+                                           Text="â‰¡Æ’Ã®â••"
                                            FontSize="27"
                                            VerticalAlignment="Center"
                                            Margin="0,0,9,0"/>
@@ -452,7 +452,7 @@
                             <!-- Subtitle -->
 
                             <TextBlock x:Name="CollectionSubtitle"
-                                       Text="Love  ΓÇó  Protection  ΓÇó  Bond Forever"
+                                       Text="Love  Î“Ã‡Ã³  Protection  Î“Ã‡Ã³  Bond Forever"
                                        FontSize="12.5"
                                        Foreground="#E3C46C"
                                        HorizontalAlignment="Center"
@@ -746,9 +746,9 @@
                         </Button.Template>
                     </Button>
 
-                    <!-- USE DANGLE -->
+                    <!-- Save &amp; Use -->
 
-                    <Button Content="Use Dangle"
+                    <Button Content="Save &amp; Use"
                             Width="118"
                             Height="36"
                             Background="Transparent"
@@ -770,7 +770,7 @@
                                                    FontSize="12"
                                                    FontWeight="Bold"
                                                    Margin="0,0,6,0"/>
-                                        <TextBlock Text="Use Dangle"
+                                        <TextBlock Text="Save &amp; Use"
                                                    Foreground="White"
                                                    FontSize="12"
                                                    FontWeight="Bold"/>
@@ -789,3 +789,4 @@
     </Border>
 
 </Window>
+
