@@ -79,6 +79,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ApplyDisplayMode();
         currentDangle = DangleCatalog.GetAll()[0];
 
         physicsTimer = new DispatcherTimer
@@ -444,7 +445,11 @@ public partial class MainWindow : Window
                     WindowStartupLocation.CenterScreen
             };
 
-        if (picker.ShowDialog() == true)
+        var pickerResult = picker.ShowDialog();
+
+        ApplyDisplayMode();
+
+        if (pickerResult == true)
         {
             currentDangle =
                 picker.SelectedDangle;
@@ -516,6 +521,11 @@ public partial class MainWindow : Window
     }
 
 
+
+    private void ApplyDisplayMode()
+    {
+        Topmost = DisplayModeService.IsAlwaysOnTop;
+    }
 
     private void BuildCharm(IDangle dangle)
     {

@@ -74,6 +74,8 @@ public partial class CharmPickerWindow : Window
     {
         InitializeComponent();
 
+        RefreshDisplayModeButtons();
+
         RefreshPremiumAccessBadge();
 
         this.currentDangle =
@@ -95,6 +97,67 @@ public partial class CharmPickerWindow : Window
     // =========================================================
     // FILTER BAR
     // =========================================================
+
+    // =========================================================
+    // DISPLAY MODE
+    // =========================================================
+
+    private void RefreshDisplayModeButtons()
+    {
+        var mode =
+            DisplayModeService.Load();
+
+        bool desktopOnly =
+            mode == DangleDisplayMode.DesktopOnly;
+
+        DesktopOnlyButton.Background =
+            desktopOnly
+                ? GoldBright.ToBrush()
+                : IvoryBright.ToBrush();
+
+        DesktopOnlyButton.Foreground =
+            desktopOnly
+                ? TextDark.ToBrush()
+                : TextMuted.ToBrush();
+
+        AlwaysOnTopButton.Background =
+            desktopOnly
+                ? IvoryBright.ToBrush()
+                : GoldBright.ToBrush();
+
+        AlwaysOnTopButton.Foreground =
+            desktopOnly
+                ? TextMuted.ToBrush()
+                : TextDark.ToBrush();
+
+        DesktopOnlyButton.BorderBrush =
+            Gold.ToBrush();
+
+        AlwaysOnTopButton.BorderBrush =
+            Gold.ToBrush();
+    }
+
+
+    private void DesktopOnlyButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        DisplayModeService.Save(
+            DangleDisplayMode.DesktopOnly);
+
+        RefreshDisplayModeButtons();
+    }
+
+
+    private void AlwaysOnTopButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        DisplayModeService.Save(
+            DangleDisplayMode.AlwaysOnTop);
+
+        RefreshDisplayModeButtons();
+    }
 
     private void BuildFilters()
     {

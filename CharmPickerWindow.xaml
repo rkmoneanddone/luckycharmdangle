@@ -174,7 +174,35 @@
 
         </Style>
 
-    </Window.Resources>
+    
+        <Style x:Key="FooterActionButton"
+               TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#203047"/>
+            <Setter Property="Background" Value="#FFFDF8"/>
+            <Setter Property="BorderBrush" Value="#C7A24D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="17"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+</Window.Resources>
 
 
     <!-- ===================================================== -->
@@ -221,7 +249,7 @@
                             HorizontalAlignment="Left"
                             Margin="0">
 
-                    <!-- TITLE + SUBTITLE — SAME LINE -->
+                    <!-- TITLE + SUBTITLE ΓÇö SAME LINE -->
                     <StackPanel Orientation="Horizontal"
                                 VerticalAlignment="Center">
 
@@ -254,17 +282,19 @@
                 <!-- CLOSE -->
 
                 <Button Grid.Column="1"
-                        Content="×"
-                        Width="36"
-                        Height="36"
-                        FontSize="24"
-                        Foreground="#53647A"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Cursor="Hand"
-                        Click="CloseButton_Click"
-                        VerticalAlignment="Top"
-                        HorizontalAlignment="Right"/>
+        Content="&#x00D7;"
+        Width="38"
+        Height="38"
+        FontSize="27"
+        FontWeight="Light"
+        Foreground="#53647A"
+        Background="Transparent"
+        BorderThickness="0"
+        Cursor="Hand"
+        Click="CloseButton_Click"
+        VerticalAlignment="Top"
+        HorizontalAlignment="Right"
+        Margin="0,-2,0,0"/>
 
             </Grid>
 
@@ -369,7 +399,7 @@
                                         VerticalAlignment="Center">
 
                                 <TextBlock x:Name="CollectionIcon"
-                                           Text="🌸"
+                                           Text="≡ƒî╕"
                                            FontSize="27"
                                            VerticalAlignment="Center"
                                            Margin="0,0,9,0"/>
@@ -388,7 +418,7 @@
                             <!-- Subtitle -->
 
                             <TextBlock x:Name="CollectionSubtitle"
-                                       Text="Love  •  Protection  •  Bond Forever"
+                                       Text="Love  ΓÇó  Protection  ΓÇó  Bond Forever"
                                        FontSize="12.5"
                                        Foreground="#E3C46C"
                                        HorizontalAlignment="Center"
@@ -447,84 +477,180 @@
 
 
             <!-- ================================================= -->
+            <!-- ================================================= -->
+            <!-- ================================================= -->
+            <!-- ================================================= -->
             <!-- FOOTER                                            -->
             <!-- ================================================= -->
 
             <Grid Grid.Row="3"
-                  Margin="0,15,0,0">
+                  Margin="0,13,0,0"
+                  Height="54">
 
                 <Grid.ColumnDefinitions>
-
+                    <ColumnDefinition Width="105"/>
+                    <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-
                 </Grid.ColumnDefinitions>
 
+                <!-- COLLECTION COUNT -->
 
-                <!-- COUNT -->
+                <TextBlock x:Name="CountText"
+                           Grid.Column="0"
+                           Text="6 dangles"
+                           FontSize="12.5"
+                           Foreground="#64748A"
+                           VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="0"
+                <!-- DISPLAY MODE -->
+
+                <Grid Grid.Column="1"
+                      VerticalAlignment="Center">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="18"/>
+                        <RowDefinition Height="32"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="Display Mode"
+                               FontFamily="Georgia"
+                               FontSize="13"
+                               FontWeight="Bold"
+                               Foreground="#17243A"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"
+                               Margin="4,0,0,0"/>
+
+                    <Border Grid.Row="1"
+                            Width="214"
+                            Height="32"
+                            Background="#FFFDF8"
+                            BorderBrush="#C9B16D"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            HorizontalAlignment="Left">
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="104"/>
+                                <ColumnDefinition Width="1"/>
+                                <ColumnDefinition Width="109"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="DesktopOnlyButton"
+                                    Grid.Column="0"
+                                    Content="Desktop Only"
+                                    Height="30"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="#17243A"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="DesktopOnlyButton_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="15,0,0,15"
+                                                Padding="8,0">
+                                            <ContentPresenter
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                            <Border Grid.Column="1"
+                                    Width="1"
+                                    Background="#D9C78F"
+                                    Margin="0,5"/>
+
+                            <Button x:Name="AlwaysOnTopButton"
+                                    Grid.Column="2"
+                                    Content="Always on Top"
+                                    Height="30"
+                                    FontSize="11.5"
+                                    FontWeight="SemiBold"
+                                    Foreground="#53647A"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Click="AlwaysOnTopButton_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"
+                                                CornerRadius="0,15,15,0"
+                                                Padding="8,0">
+                                            <ContentPresenter
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+
+                        </Grid>
+                    </Border>
+
+                </Grid>
+
+                <!-- ACTIONS -->
+
+                <StackPanel Grid.Column="2"
                             Orientation="Horizontal"
+                            HorizontalAlignment="Right"
                             VerticalAlignment="Center">
 
-                    <TextBlock x:Name="CountText"
-                               Text="6 dangles"
-                               FontSize="12.5"
-                               Foreground="#64748A"
-                               VerticalAlignment="Center"/>
+                    <!-- PREMIUM -->
 
-                </StackPanel>
-
-
-                <!-- BUTTONS -->
-
-                <StackPanel Grid.Column="1"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center">
-
-                                        <Button x:Name="PremiumAccessButton"
-                            Click="PremiumAccessButton_Click"
-                            Height="38"
-                            Margin="0,0,10,0"
+                    <Button x:Name="PremiumAccessButton"
+                            Width="142"
+                            Height="36"
+                            Margin="0,0,8,0"
                             Padding="0"
                             Background="Transparent"
                             BorderThickness="0"
-                            Cursor="Hand">
+                            Cursor="Hand"
+                            Click="PremiumAccessButton_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#2B2110"
+                                <Border Background="#261E0F"
                                         BorderBrush="#D6A62B"
                                         BorderThickness="1"
                                         CornerRadius="18"
-                                        Padding="14,6">
+                                        Padding="11,5">
                                     <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
                                         <TextBlock Text="PREMIUM"
                                                    Foreground="#F2C84B"
                                                    FontWeight="Bold"
-                                                   FontSize="13"
+                                                   FontSize="11.5"
                                                    VerticalAlignment="Center"/>
                                         <Border Background="#D6A62B"
                                                 CornerRadius="8"
-                                                Margin="8,0,0,0"
-                                                Padding="7,2">
+                                                Margin="7,0,0,0"
+                                                Padding="6,2">
                                             <TextBlock x:Name="PremiumBadgeText"
                                                        Text="{TemplateBinding Tag}"
                                                        Foreground="#172033"
                                                        FontWeight="Bold"
-                                                       FontSize="10"/>
+                                                       FontSize="9"/>
                                         </Border>
                                     </StackPanel>
                                 </Border>
                             </ControlTemplate>
                         </Button.Template>
                     </Button>
-<!-- BUY COFFEE -->
 
-                                        <Button x:Name="BuyCoffeeButton"
-                            Width="178"
-                            Height="38"
-                            Margin="0,0,12,0"
+                    <!-- COFFEE -->
+
+                    <Button x:Name="BuyCoffeeButton"
+                            Width="162"
+                            Height="36"
+                            Margin="0,0,8,0"
                             Padding="0"
                             Background="Transparent"
                             BorderThickness="0"
@@ -532,23 +658,25 @@
                             Click="BuyCoffeeButton_Click">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
-                                <Border Background="#FFF8E6"
-                                        BorderBrush="#C99A2E"
+                                <Border Background="#FFF9EA"
+                                        BorderBrush="#D3AC46"
                                         BorderThickness="1"
                                         CornerRadius="18"
-                                        Padding="13,6">
+                                        Padding="11,5">
                                     <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
-                                        <TextBlock Text="☕"
-                                                   FontSize="14"
-                                                   Margin="0,0,7,0"
+                                        <TextBlock Text="&#x2615;"
+                                                   FontSize="12.5"
+                                                   Foreground="#7A5510"
+                                                   Margin="0,0,6,0"
                                                    VerticalAlignment="Center"/>
                                         <TextBlock Text="Buy Rohit a Coffee"
                                                    Foreground="#7A5510"
                                                    FontFamily="Georgia"
                                                    FontStyle="Italic"
                                                    FontWeight="SemiBold"
-                                                   FontSize="13"
+                                                   FontSize="12"
                                                    VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </Border>
@@ -556,26 +684,67 @@
                         </Button.Template>
                     </Button>
 
-
                     <!-- CANCEL -->
 
                     <Button Content="Cancel"
-                            Width="105"
-                            Height="34"
-                            Margin="0,0,9,0"
-                            Padding="18,0"
-                            Style="{StaticResource PremiumCancelButton}"
-                            Click="CloseButton_Click"/>
-
+                            Width="82"
+                            Height="36"
+                            Margin="0,0,8,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Click="CloseButton_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#FFFDF8"
+                                        BorderBrush="#B9C3CF"
+                                        BorderThickness="1"
+                                        CornerRadius="18"
+                                        Padding="10,5">
+                                    <ContentPresenter
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        TextElement.Foreground="#42546A"
+                                        TextElement.FontSize="12"
+                                        TextElement.FontWeight="SemiBold"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
                     <!-- USE DANGLE -->
 
-                    <Button Content="✦  Use Dangle"
-                            Width="145"
-                            Height="34"
-                            Padding="18,0"
-                            Style="{StaticResource PremiumUseButton}"
-                            Click="ApplyButton_Click"/>
+                    <Button Content="Use Dangle"
+                            Width="118"
+                            Height="36"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Click="ApplyButton_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="#D4A62A"
+                                        BorderBrush="#E7C85D"
+                                        BorderThickness="1"
+                                        CornerRadius="18"
+                                        Padding="12,5">
+                                    <StackPanel Orientation="Horizontal"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                        <TextBlock Text="&#x2713;"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   FontWeight="Bold"
+                                                   Margin="0,0,6,0"/>
+                                        <TextBlock Text="Use Dangle"
+                                                   Foreground="White"
+                                                   FontSize="12"
+                                                   FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
 
                 </StackPanel>
 
