@@ -1,4 +1,4 @@
-import { onRequest } from "firebase-functions/v2/https";
+﻿import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
@@ -37,6 +37,10 @@ export type PublicRuntimeConfig = {
     dodoPremium6mProductId: string;
     dodoPremium12mProductId: string;
     dodoCoffeeProductId: string;
+  };
+  updates: {
+    latestVersion: string;
+    storeUrl: string;
   };
 };
 
@@ -77,6 +81,11 @@ export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
     dodoPremium12mProductId: "pdt_0NnCRSWuroWWdiVAHYjvm",
     dodoCoffeeProductId: "pdt_0NnCTFnzAO8ozDcPu1qTb",
   },
+  updates: {
+    // Current published Store version. Equal version = completely silent.
+    latestVersion: "0.1.7.0",
+    storeUrl: "https://apps.microsoft.com/detail/9N11M525D0M9",
+  },
 };
 
 let cachedConfig: PublicRuntimeConfig | null = null;
@@ -105,6 +114,7 @@ function mergeConfig(data: any): PublicRuntimeConfig {
   const coffee = d.coffee ?? {};
   const premium = d.premium ?? {};
   const providers = d.providers ?? {};
+  const updates = d.updates ?? {};
 
   return {
     supportEmail:
@@ -210,6 +220,18 @@ function mergeConfig(data: any): PublicRuntimeConfig {
           DEFAULT_PUBLIC_CONFIG.providers.dodoCoffeeProductId,
         ),
     },
+    updates: {
+      latestVersion:
+        String(
+          updates.latestVersion ??
+          DEFAULT_PUBLIC_CONFIG.updates.latestVersion,
+        ),
+      storeUrl:
+        String(
+          updates.storeUrl ??
+          DEFAULT_PUBLIC_CONFIG.updates.storeUrl,
+        ),
+    },
   };
 }
 
@@ -277,3 +299,6 @@ export const getPublicConfig = onRequest(
     }
   },
 );
+
+
+

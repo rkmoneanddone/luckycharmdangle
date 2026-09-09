@@ -106,6 +106,8 @@ public partial class MainWindow : Window
         BuildCharm(currentDangle);
 
         SetCharmPosition(0, 0);
+
+        _ = RefreshUpdateAvailabilityAsync();
     }
 
 
@@ -681,5 +683,39 @@ public partial class MainWindow : Window
         physicsTimer.Stop();
 
         SaveWindowPosition();
+    }
+
+    // =====================================================
+    // FIREBASE UPDATE AVAILABILITY
+    // =====================================================
+
+    private async Task RefreshUpdateAvailabilityAsync()
+    {
+        var status =
+            await UpdateAvailabilityService.GetStatusAsync();
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            UpdateLuckyDangleMenuItem.Visibility =
+                status.IsAvailable
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            UpdateLuckyDangleSeparator.Visibility =
+                status.IsAvailable
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            UpdateLuckyDangleMenuItem.Tag =
+                status.StoreUrl;
+        });
+    }
+
+    private void UpdateLuckyDangle_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        UpdateAvailabilityService.OpenStore(
+            UpdateLuckyDangleMenuItem.Tag as string);
     }
 }

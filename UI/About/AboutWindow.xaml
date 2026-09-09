@@ -121,12 +121,6 @@
                        HorizontalAlignment="Center"
                        Margin="0,0,0,2"/>
 
-            <TextBlock Text="UPI: rohitmallick85@oksbi"
-                       FontSize="11"
-                       Foreground="#8A5A18"
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,10"/>
-
 
             <!-- ================================================= -->
             <!-- CLOSE -->

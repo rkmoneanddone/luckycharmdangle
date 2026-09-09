@@ -91,6 +91,8 @@ public partial class CharmPickerWindow : Window
 
         ShowCollections(
             DangleCatalog.GetAll());
+
+        _ = RefreshUpdateAvailabilityAsync();
     }
 
 
@@ -1612,6 +1614,35 @@ public partial class CharmPickerWindow : Window
                 .ConvertFromString(
                     hex)!);
     }
+
+    // =========================================================
+    // FIREBASE UPDATE AVAILABILITY
+    // =========================================================
+
+    private async Task RefreshUpdateAvailabilityAsync()
+    {
+        var status =
+            await UpdateAvailabilityService.GetStatusAsync();
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            GetNewDanglesButton.Visibility =
+                status.IsAvailable
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            GetNewDanglesButton.Tag =
+                status.StoreUrl;
+        });
+    }
+
+    private void GetNewDanglesButton_Click(
+        object sender,
+        RoutedEventArgs e)
+    {
+        UpdateAvailabilityService.OpenStore(
+            GetNewDanglesButton.Tag as string);
+    }
 }
 
 
@@ -1628,5 +1659,4 @@ internal static class BrushExtensions
             (Color)ColorConverter
                 .ConvertFromString(
                     hex)!);
-    }
-}
+    }}

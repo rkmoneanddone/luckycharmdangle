@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Text.Json;
 
 namespace LuckyDangle.Services;
@@ -31,6 +31,14 @@ public sealed class ProviderRuntimeConfig
     public bool DodoEnabled { get; set; } = false;
 }
 
+public sealed class UpdateRuntimeConfig
+{
+    // Fail-safe client default: no Firebase value means no update indicator.
+    public string LatestVersion { get; set; } = "0.0.0.0";
+    public string StoreUrl { get; set; } =
+        "https://apps.microsoft.com/detail/9N11M525D0M9";
+}
+
 public sealed class LuckyDanglePublicConfig
 {
     public string SupportEmail { get; set; } = "connect@quickstories.in";
@@ -44,6 +52,7 @@ public sealed class LuckyDanglePublicConfig
     public CoffeeRuntimeConfig Coffee { get; set; } = new();
     public PremiumRuntimeConfig Premium { get; set; } = new();
     public ProviderRuntimeConfig Providers { get; set; } = new();
+    public UpdateRuntimeConfig Updates { get; set; } = new();
 }
 
 public static class RuntimeConfigService
@@ -99,3 +108,4 @@ public static class RuntimeConfigService
         }
     }
 }
+
