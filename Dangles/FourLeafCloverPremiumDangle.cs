@@ -1,37 +1,39 @@
 namespace LuckyDangle.Dangles;
 
-public sealed class LakshmiSpiritualDangle : ImageDangleBase
+public sealed class FourLeafCloverPremiumDangle : ImageDangleBase
 {
     public override string Id =>
-        "spiritual_lakshmi";
+        "four_leaf_clover";
 
     public override string Name =>
-        "Maa Lakshmi";
+        "Four-Leaf Clover";
 
     public override string Description =>
-        "A regal Maa Lakshmi pendant crafted in gold with pink lotus motifs, emeralds, rubies, pearls and elegant devotional detailing.";
+        "A classic four-leaf clover charm symbolizing luck, hope, faith and fortune.";
 
     public override string Category =>
-        "Spiritual";
+        "Luck";
 
     public override string Collection =>
-        "Spiritual";
+        "Lucky Charms";
 
-    public override bool IsPremium => true;
+    public override bool IsPremium =>
+        true;
 
-    public override bool RequiresPremiumAccess => true;
+    public override bool RequiresPremiumAccess =>
+        true;
 
     public override bool IsSeasonal =>
         false;
 
     protected override string AssetPath =>
-        "Assets/Dangles/spiritual_lakshmi.png";
+        "Assets/Dangles/four_leaf_clover.png";
 
     protected override double ImageWidth =>
         145;
 
     protected override double ImageHeight =>
-        225;
+        220;
 
     protected override double ImageScaleX =>
         1.0;

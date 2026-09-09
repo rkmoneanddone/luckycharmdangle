@@ -80,7 +80,9 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         ApplyDisplayMode();
-        currentDangle = DangleCatalog.GetAll()[0];
+        currentDangle =
+            DangleCatalog.GetAll()
+                .First(d => d.Id == "lucky_coin");
 
         physicsTimer = new DispatcherTimer
         {
@@ -593,6 +595,17 @@ public partial class MainWindow : Window
                             DangleAccessService.CanUse(savedDangle))
                         {
                             currentDangle = savedDangle;
+                        }
+                        else
+                        {
+                            // If an app update turns the saved dangle into
+                            // Premium for a non-Premium user, move them to
+                            // the permanent Free fallback.
+                            currentDangle =
+                                DangleCatalog.GetAll()
+                                    .First(d => d.Id == "lucky_coin");
+
+                            SaveWindowPosition();
                         }
                     }
 

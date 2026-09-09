@@ -17,7 +17,9 @@ public sealed class CornicelloDangle : ImageDangleBase
     public override string Collection =>
         "Lucky Charms";
 
-    public override bool IsPremium => false;
+    public override bool IsPremium => true;
+
+    public override bool RequiresPremiumAccess => true;
 
     public override bool IsSeasonal =>
         false;

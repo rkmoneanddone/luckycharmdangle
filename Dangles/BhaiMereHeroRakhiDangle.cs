@@ -17,7 +17,9 @@ public sealed class BhaiMereHeroRakhiDangle : ImageDangleBase
     public override string Collection =>
         "Rakhi";
 
-    public override bool IsPremium => false;
+    public override bool IsPremium => true;
+
+    public override bool RequiresPremiumAccess => true;
 
     public override bool IsSeasonal =>
         true;
