@@ -1088,7 +1088,9 @@ export const premiumReturn = onRequest(
 
       if (snap.exists) {
         status =
-          String(snap.data()?.status ?? "processing");
+          String(
+            snap.data()?.status ?? "processing",
+          );
       }
     }
 
@@ -1144,9 +1146,7 @@ body{
   padding:34px;
   text-align:center;
 }
-h1{
-  margin:0 0 12px;
-}
+h1{margin:0 0 12px}
 p{
   color:#aeb4c3;
   line-height:1.55;

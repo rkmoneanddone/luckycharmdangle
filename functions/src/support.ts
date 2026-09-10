@@ -743,7 +743,7 @@ export const coffeeReturn = onRequest(
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lucky Dangle - Thank You</title>
+<title>Lucky Dangle - Payment Status</title>
 <style>
 body{
   font-family:Segoe UI,Arial,sans-serif;
