@@ -1,10 +1,25 @@
-import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
+﻿import { onRequest } from "firebase-functions/v2/https";
+
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendPremiumActivatedEmail } from "./email";
 import { getRuntimeConfig } from "./runtimeConfig";
+import {
+  DODO_LIVE_API_KEY,
+  DODO_TEST_API_KEY,
+  RAZORPAY_LIVE_KEY_ID,
+  RAZORPAY_LIVE_KEY_SECRET,
+  RAZORPAY_TEST_KEY_ID,
+  RAZORPAY_TEST_KEY_SECRET,
+  PaymentEnvironment,
+  getDodoApiKey,
+  getDodoBaseUrl,
+  getRazorpayKeyId,
+  getRazorpayKeySecret,
+  parsePaymentEnvironment,
+  resolvePaymentEnvironment,
+} from "./paymentEnvironment";
 import { consumePremiumPurchaseVerification } from "./purchaseOtp";
 import { issueEntitlementValidationToken } from "./entitlementValidation";
 
@@ -17,9 +32,7 @@ const REGION = "asia-south1";
 const BASE_URL =
   "https://asia-south1-lucky-dangle.cloudfunctions.net";
 
-const RAZORPAY_KEY_ID = defineSecret("RAZORPAY_KEY_ID");
-const RAZORPAY_KEY_SECRET = defineSecret("RAZORPAY_KEY_SECRET");
-const DODO_PAYMENTS_API_KEY = defineSecret("DODO_PAYMENTS_API_KEY");
+
 
 type PremiumPlan = "premium_6m" | "premium_12m";
 
@@ -59,8 +72,11 @@ function emailHash(email: string): string {
     .digest("hex");
 }
 
-function entitlementDocId(email: string): string {
-  return `${PAYMENT_ENVIRONMENT}_${emailHash(email)}`;
+function entitlementDocId(
+  email: string,
+  environment: PaymentEnvironment,
+): string {
+  return `${environment}_${emailHash(email)}`;
 }
 function codeHash(code: string): string {
   return crypto
@@ -97,10 +113,6 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
   const checkoutRef =
     db.collection("premiumCheckouts").doc(checkoutId);
 
-  const paymentRef =
-    db.collection("payments").doc(
-      `${PAYMENT_ENVIRONMENT}_${provider}_${paymentId}`,
-    );
 
   return db.runTransaction(async (tx) => {
     const checkoutSnap = await tx.get(checkoutRef);
@@ -110,6 +122,8 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
     }
 
     const checkout = checkoutSnap.data()!;
+    const environment =
+      parsePaymentEnvironment(checkout.environment);
     const plan = checkout.plan as PremiumPlan;
     const email = checkout.email as string;
     const eHash = emailHash(email);
@@ -122,9 +136,14 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
       throw new Error("Checkout provider mismatch.");
     }
 
+    const paymentRef =
+      db.collection("payments").doc(
+        `${environment}_${provider}_${paymentId}`,
+      );
+
     const entitlementRef =
       db.collection("premiumEntitlements")
-        .doc(entitlementDocId(email));
+        .doc(`${environment}_${eHash}`);
 
     const priorPayment = await tx.get(paymentRef);
     const currentEntitlement = await tx.get(entitlementRef);
@@ -166,7 +185,7 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
         status: "active",
         plan,
         provider,
-        environment: PAYMENT_ENVIRONMENT,
+        environment,
         paymentId,
         purchasedAt: Timestamp.fromDate(now),
         expiresAt: Timestamp.fromDate(expiresAt),
@@ -179,7 +198,7 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
     tx.set(paymentRef, {
       type: "premium",
       provider,
-      environment: PAYMENT_ENVIRONMENT,
+      environment,
       paymentId,
       checkoutId,
       email,
@@ -215,9 +234,15 @@ export async function grantPremiumEntitlementFromVerifiedPayment(
     };
   });
 }
-async function createRazorpayOrder(checkoutId: string, email: string, plan: PremiumPlan, amountPaise: number) {
+async function createRazorpayOrder(
+  checkoutId: string,
+  email: string,
+  plan: PremiumPlan,
+  amountPaise: number,
+  environment: PaymentEnvironment,
+) {
   const auth = Buffer.from(
-    `${RAZORPAY_KEY_ID.value()}:${RAZORPAY_KEY_SECRET.value()}`,
+    `${getRazorpayKeyId(environment)}:${getRazorpayKeySecret(environment)}`,
   ).toString("base64");
 
   const response = await fetch(
@@ -256,13 +281,14 @@ async function createDodoPremiumCheckout(
   plan: PremiumPlan,
   amountUsdCents: number,
   productId: string,
+  environment: PaymentEnvironment,
 ) {
   const response = await fetch(
-    "https://test.dodopayments.com/checkouts",
+    `${getDodoBaseUrl(environment)}/checkouts`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DODO_PAYMENTS_API_KEY.value()}`,
+        Authorization: `Bearer ${getDodoApiKey(environment)}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -288,7 +314,7 @@ async function createDodoPremiumCheckout(
           plan,
           checkout_id: checkoutId,
           email_hash: emailHash(email),
-          environment: PAYMENT_ENVIRONMENT,
+          environment,
         },
         return_url:
           `${BASE_URL}/premiumReturn?checkoutId=` +
@@ -319,9 +345,12 @@ export const createPremiumCheckout = onRequest(
   {
     region: REGION,
     secrets: [
-      RAZORPAY_KEY_ID,
-      RAZORPAY_KEY_SECRET,
-      DODO_PAYMENTS_API_KEY,
+      RAZORPAY_TEST_KEY_ID,
+      RAZORPAY_LIVE_KEY_ID,
+      RAZORPAY_TEST_KEY_SECRET,
+      RAZORPAY_LIVE_KEY_SECRET,
+      DODO_TEST_API_KEY,
+      DODO_LIVE_API_KEY,
     ],
   },
   async (req, res) => {
@@ -350,7 +379,9 @@ export const createPremiumCheckout = onRequest(
       const requestedAmount =
         Number(req.body?.amount ?? 0);
 
-      const runtimeConfig = await getRuntimeConfig();
+      const runtimeConfig = await getRuntimeConfig(true);
+      const environment =
+        resolvePaymentEnvironment(runtimeConfig);
       const premiumConfig = runtimeConfig.premium;
       const providerConfig = runtimeConfig.providers;
 
@@ -429,6 +460,7 @@ export const createPremiumCheckout = onRequest(
         await consumePremiumPurchaseVerification(
           email,
           verificationToken,
+          environment,
         );
 
       if (!verifiedForCheckout) {
@@ -443,9 +475,17 @@ export const createPremiumCheckout = onRequest(
 
       if (!isIndia) {
         const productId =
-          plan === "premium_12m"
-            ? providerConfig.dodoPremium12mProductId
-            : providerConfig.dodoPremium6mProductId;
+          environment === "live"
+            ? (
+                plan === "premium_12m"
+                  ? providerConfig.dodoLivePremium12mProductId
+                  : providerConfig.dodoLivePremium6mProductId
+              )
+            : (
+                plan === "premium_12m"
+                  ? providerConfig.dodoPremium12mProductId
+                  : providerConfig.dodoPremium6mProductId
+              );
 
         if (!productId) {
           res.status(503).json({
@@ -460,7 +500,7 @@ export const createPremiumCheckout = onRequest(
           plan,
           market: "INTL",
           provider: "dodo",
-          environment: PAYMENT_ENVIRONMENT,
+          environment,
           status: "created",
           amount: requestedMinor,
           currency: "USD",
@@ -476,6 +516,7 @@ export const createPremiumCheckout = onRequest(
               plan,
               requestedMinor,
               productId,
+              environment,
             );
 
           await checkoutRef.set(
@@ -512,7 +553,7 @@ export const createPremiumCheckout = onRequest(
         plan,
         market: "IN",
         provider: "razorpay",
-        environment: PAYMENT_ENVIRONMENT,
+        environment,
         status: "created",
         amount: requestedMinor,
         currency: "INR",
@@ -525,6 +566,7 @@ export const createPremiumCheckout = onRequest(
           email,
           plan,
           requestedMinor,
+          environment,
         );
 
       await checkoutRef.set(
@@ -556,7 +598,7 @@ export const createPremiumCheckout = onRequest(
 export const razorpayCheckout = onRequest(
   {
     region: REGION,
-    secrets: [RAZORPAY_KEY_ID],
+    secrets: [RAZORPAY_TEST_KEY_ID, RAZORPAY_LIVE_KEY_ID],
   },
   async (req, res) => {
     try {
@@ -574,6 +616,8 @@ export const razorpayCheckout = onRequest(
       }
 
       const data = snap.data()!;
+      const environment =
+        parsePaymentEnvironment(data.environment);
 
       if (data.provider !== "razorpay") {
         res.status(400).send("Invalid checkout provider.");
@@ -612,7 +656,7 @@ font-weight:700;font-size:16px;cursor:pointer}
 </div>
 <script>
 const options = {
-  key: ${JSON.stringify(RAZORPAY_KEY_ID.value())},
+  key: ${JSON.stringify(getRazorpayKeyId(environment))},
   amount: ${amount},
   currency: "INR",
   name: "Lucky Dangle",
@@ -709,7 +753,11 @@ setTimeout(() => rzp.open(), 350);
 export const razorpayVerify = onRequest(
   {
     region: REGION,
-    secrets: [RAZORPAY_KEY_SECRET, SMTP_PASSWORD],
+    secrets: [
+      RAZORPAY_TEST_KEY_SECRET,
+      RAZORPAY_LIVE_KEY_SECRET,
+      SMTP_PASSWORD,
+    ],
   },
   async (req, res) => {
     setCors(res);
@@ -745,6 +793,8 @@ export const razorpayVerify = onRequest(
       }
 
       const checkout = checkoutSnap.data()!;
+      const environment =
+        parsePaymentEnvironment(checkout.environment);
 
       const expectedOrderId =
         String(checkout.providerOrderId ?? "");
@@ -760,7 +810,7 @@ export const razorpayVerify = onRequest(
         crypto
           .createHmac(
             "sha256",
-            RAZORPAY_KEY_SECRET.value(),
+            getRazorpayKeySecret(environment),
           )
           .update(
             `${expectedOrderId}|${paymentId}`,
@@ -900,6 +950,8 @@ export const premiumStatus = onRequest(
       }
 
       const data = snap.data()!;
+      const environment =
+        parsePaymentEnvironment(data.environment);
 
       if (
         data.status !== "paid" ||
@@ -914,6 +966,7 @@ export const premiumStatus = onRequest(
       const validationToken =
         await issueEntitlementValidationToken(
           String(data.email ?? ""),
+          environment,
         );
 
       res.json({
@@ -964,9 +1017,13 @@ export const restorePremium = onRequest(
         return;
       }
 
+      const runtimeConfig = await getRuntimeConfig(true);
+      const environment =
+        resolvePaymentEnvironment(runtimeConfig);
+
       const snap =
         await db.collection("premiumEntitlements")
-          .doc(entitlementDocId(email))
+          .doc(entitlementDocId(email, environment))
           .get();
 
       if (!snap.exists) {
@@ -1017,7 +1074,46 @@ export const restorePremium = onRequest(
 
 export const premiumReturn = onRequest(
   { region: REGION },
-  async (_req, res) => {
+  async (req, res) => {
+    const checkoutId =
+      String(req.query.checkoutId ?? "").trim();
+
+    let status = "processing";
+
+    if (checkoutId) {
+      const snap =
+        await db.collection("premiumCheckouts")
+          .doc(checkoutId)
+          .get();
+
+      if (snap.exists) {
+        status =
+          String(snap.data()?.status ?? "processing");
+      }
+    }
+
+    const terminalFailure =
+      status === "failed" ||
+      status === "checkout_failed";
+
+    const heading =
+      status === "paid"
+        ? "Premium activated"
+        : status === "cancelled"
+          ? "Payment cancelled"
+          : terminalFailure
+            ? "Payment failed"
+            : "Payment processing";
+
+    const message =
+      status === "paid"
+        ? "Payment confirmed. Your Lucky Dangle Premium access is active."
+        : status === "cancelled"
+          ? "The payment was cancelled. Premium was not activated."
+          : terminalFailure
+            ? "The payment could not be completed. Premium was not activated."
+            : "Lucky Dangle is waiting for final payment confirmation.";
+
     res.set(
       "Content-Type",
       "text/html; charset=utf-8",
@@ -1060,8 +1156,8 @@ p{
 </head>
 <body>
 <div class="card">
-  <h1>Thank you!</h1>
-  <p>Payment received. Lucky Dangle is verifying your Premium access.</p>
+  <h1>${heading}</h1>
+  <p>${message}</p>
   <p>You can return to Lucky Dangle and close this browser tab.</p>
 </div>
 </body>

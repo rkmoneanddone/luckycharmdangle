@@ -1,21 +1,20 @@
-import { onRequest } from "firebase-functions/v2/https";
+﻿import { onRequest } from "firebase-functions/v2/https";
 import { issueEntitlementValidationToken } from "./entitlementValidation";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendRestoreOtpEmail } from "./email";
+import { getRuntimeConfig } from "./runtimeConfig";
+import {
+  PaymentEnvironment,
+  resolvePaymentEnvironment,
+} from "./paymentEnvironment";
 
 if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
 const REGION = "asia-south1";
 
-const PAYMENT_ENVIRONMENT =
-  String(process.env.PAYMENT_ENVIRONMENT ?? "test")
-    .trim()
-    .toLowerCase() === "live"
-    ? "live"
-    : "test";
 
 function setCors(res: any) {
   res.set("Access-Control-Allow-Origin", "*");
@@ -34,8 +33,11 @@ function emailHash(email: string): string {
     .digest("hex");
 }
 
-function entitlementDocId(email: string): string {
-  return `${PAYMENT_ENVIRONMENT}_${emailHash(email)}`;
+function entitlementDocId(
+  email: string,
+  environment: PaymentEnvironment,
+): string {
+  return `${environment}_${emailHash(email)}`;
 }
 function otpHash(email: string, code: string): string {
   return crypto
@@ -70,9 +72,13 @@ export const sendRestoreOtp = onRequest(
       return;
     }
 
+    const runtimeConfig = await getRuntimeConfig(true);
+    const environment =
+      resolvePaymentEnvironment(runtimeConfig);
+
     const eHash = emailHash(email);
     const entitlementRef =
-      db.collection("premiumEntitlements").doc(entitlementDocId(email));
+      db.collection("premiumEntitlements").doc(entitlementDocId(email, environment));
     const entitlementSnap = await entitlementRef.get();
 
     // Do not reveal whether the account exists.
@@ -92,7 +98,7 @@ export const sendRestoreOtp = onRequest(
 
     const otpRef =
       db.collection("premiumRestoreOtps")
-        .doc(`${PAYMENT_ENVIRONMENT}_${eHash}`);
+        .doc(`${environment}_${eHash}`);
 
     const prior = await otpRef.get();
 
@@ -114,7 +120,7 @@ export const sendRestoreOtp = onRequest(
 
     await otpRef.set({
       emailHash: eHash,
-      environment: PAYMENT_ENVIRONMENT,
+      environment,
       codeHash: otpHash(email, code),
       attempts: 0,
       consumed: false,
@@ -153,14 +159,18 @@ export const verifyRestoreOtp = onRequest(
       return;
     }
 
+    const runtimeConfig = await getRuntimeConfig(true);
+    const environment =
+      resolvePaymentEnvironment(runtimeConfig);
+
     const eHash = emailHash(email);
 
     const otpRef =
       db.collection("premiumRestoreOtps")
-        .doc(`${PAYMENT_ENVIRONMENT}_${eHash}`);
+        .doc(`${environment}_${eHash}`);
 
     const entitlementRef =
-      db.collection("premiumEntitlements").doc(entitlementDocId(email));
+      db.collection("premiumEntitlements").doc(entitlementDocId(email, environment));
 
     const otpSnap = await otpRef.get();
     const entitlementSnap = await entitlementRef.get();
@@ -217,7 +227,10 @@ export const verifyRestoreOtp = onRequest(
     });
 
     const validationToken =
-      await issueEntitlementValidationToken(email);
+      await issueEntitlementValidationToken(
+        email,
+        environment,
+      );
 
     res.json({
       status: "active",

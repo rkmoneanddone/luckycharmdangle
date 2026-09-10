@@ -1,20 +1,19 @@
-import { onRequest } from "firebase-functions/v2/https";
+﻿import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendPurchaseOtpEmail } from "./email";
+import { getRuntimeConfig } from "./runtimeConfig";
+import {
+  PaymentEnvironment,
+  resolvePaymentEnvironment,
+} from "./paymentEnvironment";
 
 if (getApps().length === 0) initializeApp();
 
 const db = getFirestore();
 const REGION = "asia-south1";
 
-const PAYMENT_ENVIRONMENT =
-  String(process.env.PAYMENT_ENVIRONMENT ?? "test")
-    .trim()
-    .toLowerCase() === "live"
-    ? "live"
-    : "test";
 
 function setCors(res: any) {
   res.set("Access-Control-Allow-Origin", "*");
@@ -82,11 +81,15 @@ export const sendPremiumPurchaseOtp = onRequest(
         return;
       }
 
+      const runtimeConfig = await getRuntimeConfig(true);
+      const environment =
+        resolvePaymentEnvironment(runtimeConfig);
+
       const eHash = emailHash(email);
 
       const otpRef =
         db.collection("premiumPurchaseOtps")
-          .doc(`${PAYMENT_ENVIRONMENT}_${eHash}`);
+          .doc(`${environment}_${eHash}`);
 
       const prior = await otpRef.get();
 
@@ -110,7 +113,7 @@ export const sendPremiumPurchaseOtp = onRequest(
 
       await otpRef.set({
         emailHash: eHash,
-        environment: PAYMENT_ENVIRONMENT,
+        environment,
         codeHash: otpHash(email, code),
         attempts: 0,
         consumed: false,
@@ -158,11 +161,15 @@ export const verifyPremiumPurchaseOtp = onRequest(
         return;
       }
 
+      const runtimeConfig = await getRuntimeConfig(true);
+      const environment =
+        resolvePaymentEnvironment(runtimeConfig);
+
       const eHash = emailHash(email);
 
       const otpRef =
         db.collection("premiumPurchaseOtps")
-          .doc(`${PAYMENT_ENVIRONMENT}_${eHash}`);
+          .doc(`${environment}_${eHash}`);
 
       const otpSnap = await otpRef.get();
 
@@ -236,6 +243,7 @@ export const verifyPremiumPurchaseOtp = onRequest(
 export async function consumePremiumPurchaseVerification(
   email: string,
   token: string,
+  environment: PaymentEnvironment,
 ): Promise<boolean> {
   const normalized = normalizeEmail(email);
 
@@ -247,7 +255,7 @@ export async function consumePremiumPurchaseVerification(
 
   const otpRef =
     db.collection("premiumPurchaseOtps")
-      .doc(`${PAYMENT_ENVIRONMENT}_${eHash}`);
+      .doc(`${environment}_${eHash}`);
 
   return db.runTransaction(async (tx) => {
     const snap = await tx.get(otpRef);

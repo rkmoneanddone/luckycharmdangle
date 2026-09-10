@@ -1,10 +1,25 @@
-import { onRequest } from "firebase-functions/v2/https";
+﻿import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import crypto from "node:crypto";
 import { SMTP_PASSWORD, sendCoffeeThankYouEmail } from "./email";
 import { getRuntimeConfig } from "./runtimeConfig";
+import {
+  DODO_LIVE_API_KEY,
+  DODO_TEST_API_KEY,
+  RAZORPAY_LIVE_KEY_ID,
+  RAZORPAY_LIVE_KEY_SECRET,
+  RAZORPAY_TEST_KEY_ID,
+  RAZORPAY_TEST_KEY_SECRET,
+  PaymentEnvironment,
+  getDodoApiKey,
+  getDodoBaseUrl,
+  getRazorpayKeyId,
+  getRazorpayKeySecret,
+  parsePaymentEnvironment,
+  resolvePaymentEnvironment,
+} from "./paymentEnvironment";
 
 if (getApps().length === 0) initializeApp();
 
@@ -13,9 +28,7 @@ const REGION = "asia-south1";
 const BASE_URL =
   "https://asia-south1-lucky-dangle.cloudfunctions.net";
 
-const RAZORPAY_KEY_ID = defineSecret("RAZORPAY_KEY_ID");
-const RAZORPAY_KEY_SECRET = defineSecret("RAZORPAY_KEY_SECRET");
-const DODO_PAYMENTS_API_KEY = defineSecret("DODO_PAYMENTS_API_KEY");
+
 
 const PAYMENT_ENVIRONMENT =
   String(process.env.PAYMENT_ENVIRONMENT ?? "test")
@@ -55,9 +68,10 @@ async function createRazorpayOrder(
   checkoutId: string,
   email: string,
   amountPaise: number,
+  environment: PaymentEnvironment,
 ) {
   const auth = Buffer.from(
-    `${RAZORPAY_KEY_ID.value()}:${RAZORPAY_KEY_SECRET.value()}`,
+    `${getRazorpayKeyId(environment)}:${getRazorpayKeySecret(environment)}`,
   ).toString("base64");
 
   const response = await fetch(
@@ -95,13 +109,14 @@ async function createDodoCoffeeCheckout(
   email: string,
   amountCents: number,
   productId: string,
+  environment: PaymentEnvironment,
 ) {
   const response = await fetch(
-    "https://test.dodopayments.com/checkouts",
+    `${getDodoBaseUrl(environment)}/checkouts`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${DODO_PAYMENTS_API_KEY.value()}`,
+        Authorization: `Bearer ${getDodoApiKey(environment)}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -126,7 +141,7 @@ async function createDodoCoffeeCheckout(
           type: "coffee",
           checkout_id: checkoutId,
           email_hash: emailHash(email),
-          environment: PAYMENT_ENVIRONMENT,
+          environment,
         },
         return_url:
           `${BASE_URL}/coffeeReturn?checkoutId=` +
@@ -157,9 +172,12 @@ export const createCoffeeCheckout = onRequest(
   {
     region: REGION,
     secrets: [
-      RAZORPAY_KEY_ID,
-      RAZORPAY_KEY_SECRET,
-      DODO_PAYMENTS_API_KEY,
+      RAZORPAY_TEST_KEY_ID,
+      RAZORPAY_LIVE_KEY_ID,
+      RAZORPAY_TEST_KEY_SECRET,
+      RAZORPAY_LIVE_KEY_SECRET,
+      DODO_TEST_API_KEY,
+      DODO_LIVE_API_KEY,
     ],
   },
   async (req, res) => {
@@ -184,7 +202,9 @@ export const createCoffeeCheckout = onRequest(
 
       const requestedAmount =
         Number(req.body?.amount ?? 0);
-      const runtimeConfig = await getRuntimeConfig();
+      const runtimeConfig = await getRuntimeConfig(true);
+      const environment =
+        resolvePaymentEnvironment(runtimeConfig);
       const coffeeConfig = runtimeConfig.coffee;
       const providerConfig = runtimeConfig.providers;
 
@@ -227,7 +247,7 @@ export const createCoffeeCheckout = onRequest(
           emailHash: emailHash(email),
           market: "IN",
           provider: "razorpay",
-          environment: PAYMENT_ENVIRONMENT,
+          environment,
           status: "created",
           amount: amountPaise,
           currency: "INR",
@@ -239,6 +259,7 @@ export const createCoffeeCheckout = onRequest(
             checkoutRef.id,
             email,
             amountPaise,
+            environment,
           );
 
         await checkoutRef.set(
@@ -281,7 +302,9 @@ export const createCoffeeCheckout = onRequest(
       }
 
       const productId =
-        providerConfig.dodoCoffeeProductId;
+        environment === "live"
+          ? providerConfig.dodoLiveCoffeeProductId
+          : providerConfig.dodoCoffeeProductId;
 
       if (!productId) {
         res.status(503).json({
@@ -299,7 +322,7 @@ export const createCoffeeCheckout = onRequest(
         emailHash: emailHash(email),
         market: "INTL",
         provider: "dodo",
-        environment: PAYMENT_ENVIRONMENT,
+        environment,
         status: "created",
         amount: amountCents,
         currency: "USD",
@@ -314,6 +337,7 @@ export const createCoffeeCheckout = onRequest(
             email,
             amountCents,
             productId,
+            environment,
           );
 
         await checkoutRef.set(
@@ -358,7 +382,7 @@ export const createCoffeeCheckout = onRequest(
 export const coffeeRazorpayCheckout = onRequest(
   {
     region: REGION,
-    secrets: [RAZORPAY_KEY_ID],
+    secrets: [RAZORPAY_TEST_KEY_ID, RAZORPAY_LIVE_KEY_ID],
   },
   async (req, res) => {
     try {
@@ -376,6 +400,8 @@ export const coffeeRazorpayCheckout = onRequest(
       }
 
       const data = snap.data()!;
+      const environment =
+        parsePaymentEnvironment(data.environment);
 
       if (
         data.type !== "coffee" ||
@@ -416,7 +442,7 @@ font-weight:700;font-size:16px;cursor:pointer}
 </div>
 <script>
 const options = {
-  key: ${JSON.stringify(RAZORPAY_KEY_ID.value())},
+  key: ${JSON.stringify(getRazorpayKeyId(environment))},
   amount: ${amount},
   currency: "INR",
   name: "Lucky Dangle",
@@ -508,7 +534,8 @@ export const coffeeRazorpayVerify = onRequest(
   {
     region: REGION,
     secrets: [
-      RAZORPAY_KEY_SECRET,
+      RAZORPAY_TEST_KEY_SECRET,
+      RAZORPAY_LIVE_KEY_SECRET,
       SMTP_PASSWORD,
     ],
   },
@@ -546,6 +573,8 @@ export const coffeeRazorpayVerify = onRequest(
       }
 
       const checkout = checkoutSnap.data()!;
+      const environment =
+        parsePaymentEnvironment(checkout.environment);
 
       if (
         checkout.type !== "coffee" ||
@@ -576,7 +605,7 @@ export const coffeeRazorpayVerify = onRequest(
       }
 
       const expected = crypto
-        .createHmac("sha256", RAZORPAY_KEY_SECRET.value())
+        .createHmac("sha256", getRazorpayKeySecret(environment))
         .update(`${returnedOrderId}|${paymentId}`)
         .digest("hex");
 
@@ -601,7 +630,7 @@ export const coffeeRazorpayVerify = onRequest(
 
       const paymentRef =
         db.collection("payments")
-          .doc(`${PAYMENT_ENVIRONMENT}_coffee_razorpay_${paymentId}`);
+          .doc(`${environment}_coffee_razorpay_${paymentId}`);
 
       const priorPayment = await paymentRef.get();
 
@@ -611,7 +640,7 @@ export const coffeeRazorpayVerify = onRequest(
         await paymentRef.set({
           type: "coffee",
           provider: "razorpay",
-          environment: PAYMENT_ENVIRONMENT,
+          environment,
           paymentId,
           checkoutId,
           email: checkout.email,
@@ -687,10 +716,27 @@ export const coffeeReturn = onRequest(
       }
     }
 
+    const terminalFailure =
+      status === "failed" ||
+      status === "checkout_failed";
+
+    const heading =
+      status === "paid"
+        ? "Thank you!"
+        : status === "cancelled"
+          ? "Payment cancelled"
+          : terminalFailure
+            ? "Payment failed"
+            : "Payment processing";
+
     const message =
       status === "paid"
         ? "Payment confirmed. Thank you for supporting Lucky Dangle."
-        : "Payment received. Lucky Dangle is verifying it now.";
+        : status === "cancelled"
+          ? "The payment was cancelled. No successful payment was recorded."
+          : terminalFailure
+            ? "The payment could not be completed. You can return to Lucky Dangle and try again."
+            : "Lucky Dangle is waiting for final payment confirmation.";
 
     const html = `<!doctype html>
 <html>
@@ -723,7 +769,7 @@ p{color:#d7dbea;font-size:18px;line-height:1.5}
 </head>
 <body>
 <div class="card">
-<h1>Thank you!</h1>
+<h1>${heading}</h1>
 <p>${message}</p>
 <p>You can return to Lucky Dangle and close this browser tab.</p>
 </div>

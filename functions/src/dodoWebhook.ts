@@ -1,5 +1,5 @@
-import { onRequest } from "firebase-functions/v2/https";
-import { defineSecret } from "firebase-functions/params";
+﻿import { onRequest } from "firebase-functions/v2/https";
+
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { Webhook } from "standardwebhooks";
@@ -11,6 +11,12 @@ import {
 import {
   grantPremiumEntitlementFromVerifiedPayment,
 } from "./premium";
+import {
+  DODO_LIVE_WEBHOOK_SECRET,
+  DODO_TEST_WEBHOOK_SECRET,
+  PaymentEnvironment,
+  parsePaymentEnvironment,
+} from "./paymentEnvironment";
 
 if (getApps().length === 0) {
   initializeApp();
@@ -19,15 +25,7 @@ if (getApps().length === 0) {
 const db = getFirestore();
 const REGION = "asia-south1";
 
-const DODO_WEBHOOK_SECRET =
-  defineSecret("DODO_WEBHOOK_SECRET");
 
-const PAYMENT_ENVIRONMENT =
-  String(process.env.PAYMENT_ENVIRONMENT ?? "test")
-    .trim()
-    .toLowerCase() === "live"
-    ? "live"
-    : "test";
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -37,7 +35,8 @@ export const dodoWebhook = onRequest(
   {
     region: REGION,
     secrets: [
-      DODO_WEBHOOK_SECRET,
+      DODO_TEST_WEBHOOK_SECRET,
+      DODO_LIVE_WEBHOOK_SECRET,
       SMTP_PASSWORD,
     ],
   },
@@ -72,14 +71,25 @@ export const dodoWebhook = onRequest(
         req.rawBody?.toString("utf8") ??
         JSON.stringify(req.body ?? {});
 
-      const verifier =
-        new Webhook(DODO_WEBHOOK_SECRET.value());
-
-      await verifier.verify(rawPayload, {
+      const headers = {
         "webhook-id": webhookId,
         "webhook-signature": webhookSignature,
         "webhook-timestamp": webhookTimestamp,
-      });
+      };
+
+      let webhookEnvironment: PaymentEnvironment | null = null;
+
+      try {
+        await new Webhook(
+          DODO_TEST_WEBHOOK_SECRET.value(),
+        ).verify(rawPayload, headers);
+        webhookEnvironment = "test";
+      } catch (_) {
+        await new Webhook(
+          DODO_LIVE_WEBHOOK_SECRET.value(),
+        ).verify(rawPayload, headers);
+        webhookEnvironment = "live";
+      }
 
       const eventType =
         String(req.body?.type ?? "unknown");
@@ -94,7 +104,7 @@ export const dodoWebhook = onRequest(
         String(metadata?.checkout_id ?? "").trim();
 
       const webhookEventRef =
-        db.collection("dodoWebhookEvents").doc(webhookId);
+        db.collection("dodoWebhookEvents").doc(`${webhookEnvironment}_${webhookId}`);
 
       const existingEvent =
         await webhookEventRef.get();
@@ -121,7 +131,7 @@ export const dodoWebhook = onRequest(
         {
           webhookId,
           eventType,
-          environment: PAYMENT_ENVIRONMENT,
+          environment: webhookEnvironment,
           status: "received",
           receivedAt: Timestamp.now(),
         },
@@ -276,7 +286,9 @@ export const dodoWebhook = onRequest(
 
         const valid =
           checkout.provider === "dodo" &&
-          checkout.environment === PAYMENT_ENVIRONMENT &&
+          checkout.environment === webhookEnvironment &&
+          parsePaymentEnvironment(metadata?.environment) ===
+            webhookEnvironment &&
           String(checkout.providerOrderId ?? "") ===
             providerOrderId &&
           String(checkout.providerProductId ?? "") ===
@@ -444,7 +456,9 @@ export const dodoWebhook = onRequest(
       const valid =
         checkout.type === "coffee" &&
         checkout.provider === "dodo" &&
-        checkout.environment === PAYMENT_ENVIRONMENT &&
+        checkout.environment === webhookEnvironment &&
+        parsePaymentEnvironment(metadata?.environment) ===
+          webhookEnvironment &&
         String(checkout.providerOrderId ?? "") ===
           providerOrderId &&
         String(checkout.providerProductId ?? "") ===
@@ -488,7 +502,7 @@ export const dodoWebhook = onRequest(
 
       const paymentRef =
         db.collection("payments").doc(
-          `${PAYMENT_ENVIRONMENT}_coffee_dodo_${paymentId}`,
+          `${webhookEnvironment}_coffee_dodo_${paymentId}`,
         );
 
       let newlyProcessed = false;
@@ -505,7 +519,7 @@ export const dodoWebhook = onRequest(
           tx.create(paymentRef, {
             type: "coffee",
             provider: "dodo",
-            environment: PAYMENT_ENVIRONMENT,
+            environment: webhookEnvironment,
             paymentId,
             checkoutId,
             email: checkout.email,

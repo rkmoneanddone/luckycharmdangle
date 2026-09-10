@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer";
+﻿import nodemailer from "nodemailer";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
 import {
@@ -129,6 +129,27 @@ Payment reference: {{paymentId}}
 Your support helps keep Lucky Dangle growing.
 
 Support: {{supportEmail}}
+
+{{signature}}`,
+  },  coffeeThankYouV2: {
+    enabled: true,
+    subject: "Thank you for supporting Lucky Dangle",
+    text:
+`Hello,
+
+Thank you for buying Rohit a coffee and supporting Lucky Dangle.
+
+CONTRIBUTION DETAILS
+
+Amount: {{amount}}
+Payment reference: {{paymentId}}
+
+Your support helps keep Lucky Dangle growing and improving.
+
+If you have any questions about this payment, contact:
+{{supportEmail}}
+
+Thank you again for supporting Lucky Dangle.
 
 {{signature}}`,
   },
@@ -432,7 +453,7 @@ export async function sendCoffeeThankYouEmail(input: {
   paymentId: string;
 }) {
   await sendTemplate(
-    "coffeeThankYou",
+    "coffeeThankYouV2",
     input.email,
     {
       amount:

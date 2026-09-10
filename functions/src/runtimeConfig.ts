@@ -37,6 +37,9 @@ export type PublicRuntimeConfig = {
     dodoPremium6mProductId: string;
     dodoPremium12mProductId: string;
     dodoCoffeeProductId: string;
+    dodoLivePremium6mProductId: string;
+    dodoLivePremium12mProductId: string;
+    dodoLiveCoffeeProductId: string;
   };
   payments: {
     production: boolean;
@@ -83,6 +86,9 @@ export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
     dodoPremium6mProductId: "pdt_0NnCRAFAqYH04hR2VvDgu",
     dodoPremium12mProductId: "pdt_0NnCRSWuroWWdiVAHYjvm",
     dodoCoffeeProductId: "pdt_0NnCTFnzAO8ozDcPu1qTb",
+    dodoLivePremium6mProductId: "pdt_0NnFS5cucmfjcOU1KUYfZ",
+    dodoLivePremium12mProductId: "pdt_0NnFS5ndTNTTzhUXgDGXn",
+    dodoLiveCoffeeProductId: "pdt_0NnFS5yrE6CWFoeXqX1fZ",
   },
   payments: {
     production: false,
@@ -226,6 +232,21 @@ function mergeConfig(data: any): PublicRuntimeConfig {
           providers.dodoCoffeeProductId ??
           DEFAULT_PUBLIC_CONFIG.providers.dodoCoffeeProductId,
         ),
+      dodoLivePremium6mProductId:
+        String(
+          providers.dodoLivePremium6mProductId ??
+          DEFAULT_PUBLIC_CONFIG.providers.dodoLivePremium6mProductId,
+        ),
+      dodoLivePremium12mProductId:
+        String(
+          providers.dodoLivePremium12mProductId ??
+          DEFAULT_PUBLIC_CONFIG.providers.dodoLivePremium12mProductId,
+        ),
+      dodoLiveCoffeeProductId:
+        String(
+          providers.dodoLiveCoffeeProductId ??
+          DEFAULT_PUBLIC_CONFIG.providers.dodoLiveCoffeeProductId,
+        ),
     },
     payments: {
       production:
@@ -311,6 +332,3 @@ export const getPublicConfig = onRequest(
     }
   },
 );
-
-
-

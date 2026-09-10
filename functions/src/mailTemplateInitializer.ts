@@ -1,4 +1,4 @@
-import { onRequest } from "firebase-functions/v2/https";
+﻿import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import {
@@ -28,6 +28,33 @@ Premium active until: {{expiresAt}}
 Please keep this email for your records.
 
 Support: {{supportEmail}}
+
+{{signature}}`,
+  },  premiumActivatedV2: {
+    enabled: true,
+    subject: "Lucky Dangle Premium is now active",
+    text:
+`Hello,
+
+Thank you for choosing Lucky Dangle Premium.
+
+Your Premium access has been activated successfully.
+
+PURCHASE DETAILS
+
+Plan: {{plan}}
+Amount paid: {{amount}}
+Payment reference: {{paymentId}}
+Premium access valid until: {{expiresAt}}
+
+You can now use all Premium Lucky Dangles included with your plan.
+
+Your Premium access is linked to the email address used during purchase. If you reinstall Lucky Dangle or move to another Windows PC, use Restore Premium in the app and verify the same email address.
+
+If you need help with your purchase or Premium access, contact:
+{{supportEmail}}
+
+Thank you for supporting Lucky Dangle.
 
 {{signature}}`,
   },
@@ -77,6 +104,27 @@ Payment reference: {{paymentId}}
 Your support helps keep Lucky Dangle growing.
 
 Support: {{supportEmail}}
+
+{{signature}}`,
+  },  coffeeThankYouV2: {
+    enabled: true,
+    subject: "Thank you for supporting Lucky Dangle",
+    text:
+`Hello,
+
+Thank you for buying Rohit a coffee and supporting Lucky Dangle.
+
+CONTRIBUTION DETAILS
+
+Amount: {{amount}}
+Payment reference: {{paymentId}}
+
+Your support helps keep Lucky Dangle growing and improving.
+
+If you have any questions about this payment, contact:
+{{supportEmail}}
+
+Thank you again for supporting Lucky Dangle.
 
 {{signature}}`,
   },
@@ -140,6 +188,41 @@ export const initializeMailTemplates = onRequest(
         if (!data.privacyUrl) {
           patch.privacyUrl =
             DEFAULT_PUBLIC_CONFIG.privacyUrl;
+        }
+
+        if (!data.payments) {
+          patch.payments =
+            DEFAULT_PUBLIC_CONFIG.payments;
+        }
+
+        const currentProviders =
+          data.providers ?? {};
+
+        const providerPatch: Record<string, unknown> = {};
+
+        if (!currentProviders.dodoLivePremium6mProductId) {
+          providerPatch.dodoLivePremium6mProductId =
+            DEFAULT_PUBLIC_CONFIG.providers
+              .dodoLivePremium6mProductId;
+        }
+
+        if (!currentProviders.dodoLivePremium12mProductId) {
+          providerPatch.dodoLivePremium12mProductId =
+            DEFAULT_PUBLIC_CONFIG.providers
+              .dodoLivePremium12mProductId;
+        }
+
+        if (!currentProviders.dodoLiveCoffeeProductId) {
+          providerPatch.dodoLiveCoffeeProductId =
+            DEFAULT_PUBLIC_CONFIG.providers
+              .dodoLiveCoffeeProductId;
+        }
+
+        if (Object.keys(providerPatch).length > 0) {
+          patch.providers = {
+            ...currentProviders,
+            ...providerPatch,
+          };
         }
 
         if (Object.keys(patch).length > 0) {
