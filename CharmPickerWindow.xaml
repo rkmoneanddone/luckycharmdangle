@@ -1,4 +1,4 @@
-<Window x:Class="LuckyDangle.CharmPickerWindow"
+﻿<Window x:Class="LuckyDangle.CharmPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Width="900"
@@ -682,6 +682,7 @@
                     <!-- COFFEE -->
 
                     <Button x:Name="BuyCoffeeButton"
+                            Visibility="Collapsed"
                             Width="162"
                             Height="36"
                             Margin="0,0,8,0"
@@ -789,4 +790,3 @@
     </Border>
 
 </Window>
-
