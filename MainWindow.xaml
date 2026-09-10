@@ -1,4 +1,4 @@
-<Window x:Class="LuckyDangle.MainWindow"
+﻿<Window x:Class="LuckyDangle.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None"
@@ -400,6 +400,7 @@
         </MenuItem>
 
         <MenuItem Header="Send Rohit a Coffee"
+                  Visibility="Collapsed"
                   Style="{StaticResource SupportMenuItem}"
                   Click="SupportLuckyCharm_Click">
             <MenuItem.Icon>
