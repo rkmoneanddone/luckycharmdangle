@@ -38,6 +38,9 @@ export type PublicRuntimeConfig = {
     dodoPremium12mProductId: string;
     dodoCoffeeProductId: string;
   };
+  payments: {
+    production: boolean;
+  };
   updates: {
     latestVersion: string;
     storeUrl: string;
@@ -81,6 +84,9 @@ export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
     dodoPremium12mProductId: "pdt_0NnCRSWuroWWdiVAHYjvm",
     dodoCoffeeProductId: "pdt_0NnCTFnzAO8ozDcPu1qTb",
   },
+  payments: {
+    production: false,
+  },
   updates: {
     // Current published Store version. Equal version = completely silent.
     latestVersion: "0.1.7.0",
@@ -114,6 +120,7 @@ function mergeConfig(data: any): PublicRuntimeConfig {
   const coffee = d.coffee ?? {};
   const premium = d.premium ?? {};
   const providers = d.providers ?? {};
+  const payments = d.payments ?? {};
   const updates = d.updates ?? {};
 
   return {
@@ -219,6 +226,11 @@ function mergeConfig(data: any): PublicRuntimeConfig {
           providers.dodoCoffeeProductId ??
           DEFAULT_PUBLIC_CONFIG.providers.dodoCoffeeProductId,
         ),
+    },
+    payments: {
+      production:
+        payments.production ??
+        DEFAULT_PUBLIC_CONFIG.payments.production,
     },
     updates: {
       latestVersion:
