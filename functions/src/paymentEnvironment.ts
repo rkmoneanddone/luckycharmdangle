@@ -26,6 +26,17 @@ export const DODO_LIVE_API_KEY =
 export const DODO_LIVE_WEBHOOK_SECRET =
   defineSecret("DODO_LIVE_WEBHOOK_SECRET");
 
+export function resolvePaymentEnvironment(
+  runtimeConfig: {
+    payments?: {
+      production?: boolean;
+    };
+  },
+): PaymentEnvironment {
+  return runtimeConfig.payments?.production === true
+    ? "live"
+    : "test";
+}
 export function parsePaymentEnvironment(
   value: unknown,
 ): PaymentEnvironment {
