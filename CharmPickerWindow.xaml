@@ -538,32 +538,26 @@
 
                 <!-- DISPLAY MODE -->
 
-                <Grid Grid.Column="1"
-                      VerticalAlignment="Center">
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
 
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="18"/>
-                        <RowDefinition Height="32"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0"
-                               Text="Display Mode"
+                    <TextBlock Text="Display Mode"
                                FontFamily="Georgia"
                                FontSize="13"
                                FontWeight="Bold"
                                Foreground="#17243A"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Top"
-                               Margin="4,0,0,0"/>
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0"/>
 
-                    <Border Grid.Row="1"
-                            Width="214"
+                    <Border Width="214"
                             Height="32"
                             Background="#FFFDF8"
                             BorderBrush="#C9B16D"
                             BorderThickness="1"
                             CornerRadius="16"
-                            HorizontalAlignment="Left">
+                            VerticalAlignment="Center">
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -628,8 +622,7 @@
                         </Grid>
                     </Border>
 
-                </Grid>
-
+                </StackPanel>
                 <!-- ACTIONS -->
 
                 <StackPanel Grid.Column="2"
