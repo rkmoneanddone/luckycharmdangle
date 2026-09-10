@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net.Mail;
 using System.Windows;
 using LuckyDangle.Services;
@@ -57,14 +57,14 @@ private void ApplyMarketPricing()
     {
         if (IsIndia)
         {
-            SixMonthPriceText.Text = $"Minimum \u20B9{premiumConfig.India6mMin:0.##}";
-            YearPriceText.Text = $"Minimum \u20B9{premiumConfig.India12mMin:0.##}";
+            SixMonthPriceText.Text = $"\u20B9{premiumConfig.India6mMin:0.##}";
+            YearPriceText.Text = $"\u20B9{premiumConfig.India12mMin:0.##}";
             CurrencyText.Text = "\u20B9";
         }
         else
         {
-            SixMonthPriceText.Text = $"Minimum ${premiumConfig.International6mMin:0.##}";
-            YearPriceText.Text = $"Minimum ${premiumConfig.International12mMin:0.##}";
+            SixMonthPriceText.Text = $"${premiumConfig.International6mMin:0.##}";
+            YearPriceText.Text = $"${premiumConfig.International12mMin:0.##}";
             CurrencyText.Text = "$";
         }
 
@@ -90,8 +90,8 @@ private void ApplyMarketPricing()
 
         AmountHintText.Text =
             IsIndia
-                ? $"Minimum \u20B9{minimum:0}. You may contribute more if you wish."
-                : $"Minimum ${minimum:0}. You may contribute more if you wish.";
+                ? $"Price \u20B9{minimum:0}."
+                : $"Price ${minimum:0}.";
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -508,8 +508,12 @@ private void ApplyMarketPricing()
             return;
         }
 
-        if (!TryReadAmount(out var amount))
-            return;
+        // Fixed-price Premium software purchase.
+        var amount = MinimumAmount;
+        AmountTextBox.Text =
+            amount.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture);
 
         var plan =
             YearPlan.IsChecked == true

@@ -416,27 +416,16 @@ export const createPremiumCheckout = onRequest(
               : premiumConfig.international6mMin
           ) * 100;
 
-      const maximumMinor = isIndia
-        ? premiumConfig.indiaMax * 100
-        : premiumConfig.internationalMax * 100;
-
       const currency = isIndia ? "INR" : "USD";
 
+      // Fixed-price Premium purchase: reject altered/custom amounts.
       if (
         !Number.isFinite(requestedMinor) ||
-        requestedMinor < minimumMinor
+        requestedMinor !== minimumMinor
       ) {
         res.status(400).json({
           error:
-            `Amount must be at least ${currency} ${minimumMinor / 100}.`,
-        });
-        return;
-      }
-
-      if (requestedMinor > maximumMinor) {
-        res.status(400).json({
-          error:
-            `Contribution amount cannot exceed ${currency} ${maximumMinor / 100}.`,
+            `Amount must match the selected plan price: ${currency} ${minimumMinor / 100}.`,
         });
         return;
       }

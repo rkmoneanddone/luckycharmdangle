@@ -1,4 +1,4 @@
-<Window x:Class="LuckyDangle.PremiumUpsellWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Lucky Dangle Premium" Width="540" Height="535" MinHeight="300" MaxHeight="620" WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Loaded="Window_Loaded">
+﻿<Window x:Class="LuckyDangle.PremiumUpsellWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Lucky Dangle Premium" Width="540" Height="535" MinHeight="300" MaxHeight="620" WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Loaded="Window_Loaded">
   <Window.Resources>
     <LinearGradientBrush x:Key="GoldBrush" StartPoint="0,0" EndPoint="1,1">
       <GradientStop Color="#FFF6D365" Offset="0" />
@@ -82,19 +82,19 @@
             </Grid.ColumnDefinitions>
             <RadioButton x:Name="SixMonthPlan" Grid.Column="0" GroupName="Plan" IsChecked="True" Checked="Plan_Checked" Style="{StaticResource PlanRadio}">
               <StackPanel>
-                <TextBlock x:Name="SixMonthPriceText" Text="Minimum &#x20B9;199" FontSize="16" FontWeight="Bold" Foreground="White" />
+                <TextBlock x:Name="SixMonthPriceText" Text="&#x20B9;199" FontSize="16" FontWeight="Bold" Foreground="White" />
                 <TextBlock Text="6 months" Margin="0,2,0,0" FontSize="12" Foreground="#AEB4C3" />
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="YearPlan" Grid.Column="2" GroupName="Plan" Checked="Plan_Checked" Style="{StaticResource PlanRadio}">
               <StackPanel>
-                <TextBlock x:Name="YearPriceText" Text="Minimum &#x20B9;299" FontSize="16" FontWeight="Bold" Foreground="White" />
+                <TextBlock x:Name="YearPriceText" Text="&#x20B9;299" FontSize="16" FontWeight="Bold" Foreground="White" />
                 <TextBlock Text="1 year" Margin="0,2,0,0" FontSize="12" Foreground="#AEB4C3" />
               </StackPanel>
             </RadioButton>
           </Grid>
-          <TextBlock Text="Amount" Margin="2,9,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
-          <Grid>
+          <TextBlock Text="Amount" Visibility="Collapsed" Margin="2,9,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
+          <Grid Visibility="Collapsed">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="40" />
               <ColumnDefinition Width="*" />
@@ -105,7 +105,7 @@
             <TextBox x:Name="AmountTextBox"
                              TextChanged="AmountTextBox_TextChanged" PreviewTextInput="AmountTextBox_PreviewTextInput" Grid.Column="1" Height="38" Padding="10,8" Text="199" FontSize="15" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="0,1,1,1" />
           </Grid>
-          <TextBlock x:Name="AmountHintText" Text="Minimum &#x20B9;199. You may contribute more if you wish." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
+          <TextBlock x:Name="AmountHintText" Visibility="Collapsed" Text="Price &#x20B9;199." Margin="2,4,0,0" Foreground="#8F96A6" FontSize="11.5" />
           <TextBlock Text="Email" Margin="2,9,0,4" Foreground="#D9DCE5" FontSize="12.5" FontWeight="SemiBold" />
           <TextBox x:Name="EmailTextBox" Height="38" Padding="10,8" FontSize="14" Background="#202430" Foreground="White" BorderBrush="#3A4050" BorderThickness="1" />
                 <StackPanel Margin="0,6,0,0">
