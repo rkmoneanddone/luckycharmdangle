@@ -1,4 +1,5 @@
-﻿using System;
+using System.Diagnostics;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Windows;
@@ -72,5 +73,24 @@ public partial class AboutWindow : Window
         {
             DragMove();
         }
+    }
+
+    private void Hyperlink_RequestNavigate(
+        object sender,
+        System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // Ignore browser launch failures; the About window stays usable.
+        }
+
+        e.Handled = true;
     }
 }

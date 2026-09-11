@@ -1,4 +1,4 @@
-﻿using System.Net.Http;
+using System.Net.Http;
 using System.Text.Json;
 
 namespace LuckyDangle.Services;
@@ -17,8 +17,8 @@ public sealed class CoffeeRuntimeConfig
 
 public sealed class PremiumRuntimeConfig
 {
-    public decimal India6mMin { get; set; } = 199m;
-    public decimal India12mMin { get; set; } = 299m;
+    public decimal India6mMin { get; set; } = 299m;
+    public decimal India12mMin { get; set; } = 449m;
     public decimal IndiaMax { get; set; } = 19999m;
     public decimal International6mMin { get; set; } = 6m;
     public decimal International12mMin { get; set; } = 9m;
@@ -27,8 +27,8 @@ public sealed class PremiumRuntimeConfig
 
 public sealed class ProviderRuntimeConfig
 {
-    public bool RazorpayEnabled { get; set; } = true;
-    public bool DodoEnabled { get; set; } = false;
+    public bool RazorpayEnabled { get; set; } = false;
+    public bool DodoEnabled { get; set; } = true;
 }
 
 public sealed class UpdateRuntimeConfig

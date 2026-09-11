@@ -1,4 +1,4 @@
-﻿import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -52,7 +52,7 @@ const PAYMENT_ENVIRONMENT =
     : "test";
 
 function providerForMarket(market: string): "razorpay" | "dodo" {
-  return market === "IN" ? "razorpay" : "dodo";
+  return "dodo";
 }
 
 function setCors(res: any) {
@@ -280,6 +280,7 @@ async function createDodoPremiumCheckout(
   email: string,
   plan: PremiumPlan,
   amountUsdCents: number,
+  currency: "INR" | "USD",
   productId: string,
   environment: PaymentEnvironment,
 ) {
@@ -303,7 +304,7 @@ async function createDodoPremiumCheckout(
           email,
           name: "Lucky Dangle Customer",
         },
-        billing_currency: "USD",
+        billing_currency: currency,
         feature_flags: {
           allow_customer_editing_email: false,
           allow_currency_selection: false,
@@ -430,20 +431,12 @@ export const createPremiumCheckout = onRequest(
         return;
       }
 
-      if (isIndia && !providerConfig.razorpayEnabled) {
-        res.status(503).json({
-          error: "Premium payments are temporarily unavailable.",
-        });
-        return;
-      }
-
-      if (!isIndia && !providerConfig.dodoEnabled) {
-        res.status(503).json({
-          error:
-            "International Premium payments are temporarily unavailable.",
-        });
-        return;
-      }
+      if (!providerConfig.dodoEnabled) {
+      res.status(503).json({
+        error: "Premium payments are temporarily unavailable.",
+      });
+      return;
+    }
 
       const verifiedForCheckout =
         await consumePremiumPurchaseVerification(
@@ -462,21 +455,39 @@ export const createPremiumCheckout = onRequest(
       const checkoutRef =
         db.collection("premiumCheckouts").doc();
 
-      if (!isIndia) {
-        const productId =
-          environment === "live"
-            ? (
-                plan === "premium_12m"
-                  ? providerConfig.dodoLivePremium12mProductId
-                  : providerConfig.dodoLivePremium6mProductId
-              )
-            : (
-                plan === "premium_12m"
-                  ? providerConfig.dodoPremium12mProductId
-                  : providerConfig.dodoPremium6mProductId
-              );
+      {
+      const productId =
+        environment === "live"
+          ? (
+              isIndia
+                ? (
+                    plan === "premium_12m"
+                      ? providerConfig.dodoLiveIndiaPremium12mProductId
+                      : providerConfig.dodoLiveIndiaPremium6mProductId
+                  )
+                : (
+                    plan === "premium_12m"
+                      ? providerConfig.dodoLivePremium12mProductId
+                      : providerConfig.dodoLivePremium6mProductId
+                  )
+            )
+          : (
+              isIndia
+                ? (
+                    plan === "premium_12m"
+                      ? providerConfig.dodoIndiaPremium12mProductId
+                      : providerConfig.dodoIndiaPremium6mProductId
+                  )
+                : (
+                    plan === "premium_12m"
+                      ? providerConfig.dodoPremium12mProductId
+                      : providerConfig.dodoPremium6mProductId
+                  )
+            );
 
-        if (!productId) {
+      const dodoCurrency: "INR" | "USD" =
+        isIndia ? "INR" : "USD";
+if (!productId) {
           res.status(503).json({
             error: "Dodo Premium product is not configured.",
           });
@@ -487,12 +498,12 @@ export const createPremiumCheckout = onRequest(
           email,
           emailHash: emailHash(email),
           plan,
-          market: "INTL",
+          market,
           provider: "dodo",
           environment,
           status: "created",
           amount: requestedMinor,
-          currency: "USD",
+          currency: dodoCurrency,
           providerProductId: productId,
           createdAt: Timestamp.now(),
         });
@@ -504,7 +515,8 @@ export const createPremiumCheckout = onRequest(
               email,
               plan,
               requestedMinor,
-              productId,
+              dodoCurrency,
+        productId,
               environment,
             );
 

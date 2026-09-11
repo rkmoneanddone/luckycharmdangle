@@ -1,4 +1,4 @@
-﻿import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -107,7 +107,8 @@ async function createRazorpayOrder(
 async function createDodoCoffeeCheckout(
   checkoutId: string,
   email: string,
-  amountCents: number,
+  amountMinor: number,
+  currency: "INR" | "USD",
   productId: string,
   environment: PaymentEnvironment,
 ) {
@@ -124,14 +125,14 @@ async function createDodoCoffeeCheckout(
           {
             product_id: productId,
             quantity: 1,
-            amount: amountCents,
+            amount: amountMinor,
           },
         ],
         customer: {
           email,
           name: "Lucky Dangle Supporter",
         },
-        billing_currency: "USD",
+        billing_currency: currency,
         feature_flags: {
           allow_customer_editing_email: false,
           allow_currency_selection: false,
@@ -172,10 +173,6 @@ export const createCoffeeCheckout = onRequest(
   {
     region: REGION,
     secrets: [
-      RAZORPAY_TEST_KEY_ID,
-      RAZORPAY_LIVE_KEY_ID,
-      RAZORPAY_TEST_KEY_SECRET,
-      RAZORPAY_LIVE_KEY_SECRET,
       DODO_TEST_API_KEY,
       DODO_LIVE_API_KEY,
     ],
@@ -189,7 +186,9 @@ export const createCoffeeCheckout = onRequest(
     }
 
     if (req.method !== "POST") {
-      res.status(405).json({ error: "POST required." });
+      res.status(405).json({
+        error: "Method not allowed.",
+      });
       return;
     }
 
@@ -202,11 +201,18 @@ export const createCoffeeCheckout = onRequest(
 
       const requestedAmount =
         Number(req.body?.amount ?? 0);
-      const runtimeConfig = await getRuntimeConfig(true);
+
+      const runtimeConfig =
+        await getRuntimeConfig(true);
+
       const environment =
         resolvePaymentEnvironment(runtimeConfig);
-      const coffeeConfig = runtimeConfig.coffee;
-      const providerConfig = runtimeConfig.providers;
+
+      const coffeeConfig =
+        runtimeConfig.coffee;
+
+      const providerConfig =
+        runtimeConfig.providers;
 
       if (!isValidEmail(email)) {
         res.status(400).json({
@@ -215,96 +221,62 @@ export const createCoffeeCheckout = onRequest(
         return;
       }
 
-      if (market === "IN" && !providerConfig.razorpayEnabled) {
-        res.status(503).json({
-          error: "Coffee payments are temporarily unavailable.",
-        });
-        return;
-      }
-
-      if (market === "IN") {
-        const amountPaise =
-          Math.round(requestedAmount * 100);
-
-        if (
-          !Number.isFinite(amountPaise) ||
-          amountPaise < coffeeConfig.indiaMin * 100 ||
-          amountPaise > coffeeConfig.indiaMax * 100
-        ) {
-          res.status(400).json({
-            error:
-              `Coffee contribution must be between INR ${coffeeConfig.indiaMin} and INR ${coffeeConfig.indiaMax}.`,
-          });
-          return;
-        }
-
-        const checkoutRef =
-          db.collection("supportCheckouts").doc();
-
-        await checkoutRef.set({
-          type: "coffee",
-          email,
-          emailHash: emailHash(email),
-          market: "IN",
-          provider: "razorpay",
-          environment,
-          status: "created",
-          amount: amountPaise,
-          currency: "INR",
-          createdAt: Timestamp.now(),
-        });
-
-        const order =
-          await createRazorpayOrder(
-            checkoutRef.id,
-            email,
-            amountPaise,
-            environment,
-          );
-
-        await checkoutRef.set(
-          { providerOrderId: order.id },
-          { merge: true },
-        );
-
-        res.json({
-          checkoutId: checkoutRef.id,
-          checkoutUrl:
-            `${BASE_URL}/coffeeRazorpayCheckout?checkoutId=` +
-            encodeURIComponent(checkoutRef.id),
-          provider: "razorpay",
-        });
-
-        return;
-      }
-
-      const amountCents =
-        Math.round(requestedAmount * 100);
-
-      if (
-        !Number.isFinite(amountCents) ||
-        amountCents < coffeeConfig.internationalMin * 100 ||
-        amountCents > coffeeConfig.internationalMax * 100
-      ) {
+      if (market !== "IN" && market !== "INTL") {
         res.status(400).json({
-          error:
-            `Coffee contribution must be between USD ${coffeeConfig.internationalMin} and USD ${coffeeConfig.internationalMax}.`,
+          error: "Invalid market.",
         });
         return;
       }
 
       if (!providerConfig.dodoEnabled) {
         res.status(503).json({
-          error:
-            "International coffee payments are temporarily unavailable.",
+          error: "Coffee payments are temporarily unavailable.",
         });
         return;
       }
 
+      const isIndia =
+        market === "IN";
+
+      const amountMinor =
+        Math.round(requestedAmount * 100);
+
+      const minimumMinor =
+        (isIndia
+          ? coffeeConfig.indiaMin
+          : coffeeConfig.internationalMin) * 100;
+
+      const maximumMinor =
+        (isIndia
+          ? coffeeConfig.indiaMax
+          : coffeeConfig.internationalMax) * 100;
+
+      if (
+        !Number.isFinite(amountMinor) ||
+        amountMinor < minimumMinor ||
+        amountMinor > maximumMinor
+      ) {
+        res.status(400).json({
+          error: "Coffee amount is outside the allowed range.",
+        });
+        return;
+      }
+
+      const currency: "INR" | "USD" =
+        isIndia ? "INR" : "USD";
+
       const productId =
         environment === "live"
-          ? providerConfig.dodoLiveCoffeeProductId
-          : providerConfig.dodoCoffeeProductId;
+          ? (
+              isIndia
+                ? providerConfig.dodoLiveIndiaCoffeeProductId
+                : providerConfig.dodoLiveCoffeeProductId
+            )
+          : (
+              isIndia
+                ? providerConfig.dodoIndiaCoffeeProductId
+                : providerConfig.dodoCoffeeProductId
+            );
 
       if (!productId) {
         res.status(503).json({
@@ -320,12 +292,12 @@ export const createCoffeeCheckout = onRequest(
         type: "coffee",
         email,
         emailHash: emailHash(email),
-        market: "INTL",
+        market,
         provider: "dodo",
         environment,
         status: "created",
-        amount: amountCents,
-        currency: "USD",
+        amount: amountMinor,
+        currency,
         providerProductId: productId,
         createdAt: Timestamp.now(),
       });
@@ -335,7 +307,8 @@ export const createCoffeeCheckout = onRequest(
           await createDodoCoffeeCheckout(
             checkoutRef.id,
             email,
-            amountCents,
+            amountMinor,
+            currency,
             productId,
             environment,
           );
@@ -364,21 +337,28 @@ export const createCoffeeCheckout = onRequest(
           { merge: true },
         );
 
-        throw error;
+        console.error(
+          "Coffee checkout creation failed",
+          error,
+        );
+
+        res.status(502).json({
+          error: "Could not start Coffee payment.",
+        });
+        return;
       }
     } catch (error) {
-      console.error(error);
+      console.error(
+        "createCoffeeCheckout failed",
+        error,
+      );
 
       res.status(500).json({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unable to create coffee checkout.",
+        error: "Could not create Coffee checkout.",
       });
     }
   },
 );
-
 export const coffeeRazorpayCheckout = onRequest(
   {
     region: REGION,

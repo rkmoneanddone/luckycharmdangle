@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Net.Mail;
 using System.Windows;
 using LuckyDangle.Services;
@@ -117,10 +117,7 @@ private void ApplyMarketPricing()
                 runtimeConfig.SupportEmail;
             ApplyMarketPricing();
 
-            var providerEnabled =
-                IsIndia
-                    ? providerConfig.RazorpayEnabled
-                    : providerConfig.DodoEnabled;
+            var providerEnabled = providerConfig.DodoEnabled;
 
             if (!providerEnabled)
             {

@@ -1,4 +1,4 @@
-﻿import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 
@@ -37,10 +37,18 @@ export type PublicRuntimeConfig = {
     dodoPremium6mProductId: string;
     dodoPremium12mProductId: string;
     dodoCoffeeProductId: string;
-    dodoLivePremium6mProductId: string;
+    
+    dodoIndiaPremium6mProductId: string;
+    dodoIndiaPremium12mProductId: string;
+    dodoIndiaCoffeeProductId: string;
+dodoLivePremium6mProductId: string;
     dodoLivePremium12mProductId: string;
     dodoLiveCoffeeProductId: string;
-  };
+  
+    dodoLiveIndiaPremium6mProductId: string;
+    dodoLiveIndiaPremium12mProductId: string;
+    dodoLiveIndiaCoffeeProductId: string;
+};
   payments: {
     production: boolean;
   };
@@ -73,22 +81,28 @@ export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
     internationalMax: 100,
   },
   premium: {
-    india6mMin: 199,
-    india12mMin: 299,
+    india6mMin: 299,
+    india12mMin: 449,
     indiaMax: 19999,
     international6mMin: 6,
     international12mMin: 9,
     internationalMax: 200,
   },
   providers: {
-    razorpayEnabled: true,
-    dodoEnabled: false,
+    razorpayEnabled: false,
+    dodoEnabled: true,
     dodoPremium6mProductId: "pdt_0NnCRAFAqYH04hR2VvDgu",
     dodoPremium12mProductId: "pdt_0NnCRSWuroWWdiVAHYjvm",
     dodoCoffeeProductId: "pdt_0NnCTFnzAO8ozDcPu1qTb",
+    dodoIndiaPremium6mProductId: "pdt_0NnM8AQqHD1XEhLyzyT6C",
+    dodoIndiaPremium12mProductId: "pdt_0NnM9jzfJLjhSgUA42MPD",
+    dodoIndiaCoffeeProductId: "pdt_0NnMAhCAa15nvgyczzZ38",
     dodoLivePremium6mProductId: "pdt_0NnFS5cucmfjcOU1KUYfZ",
     dodoLivePremium12mProductId: "pdt_0NnFS5ndTNTTzhUXgDGXn",
     dodoLiveCoffeeProductId: "pdt_0NnFS5yrE6CWFoeXqX1fZ",
+    dodoLiveIndiaPremium6mProductId: "pdt_0NnMA4RynJFsheY60hrkA",
+    dodoLiveIndiaPremium12mProductId: "pdt_0NnMA4Eu9MLO1Nwm4qEaX",
+    dodoLiveIndiaCoffeeProductId: "pdt_0NnMAth6EVGySudrhcQjR",
   },
   payments: {
     production: false,
@@ -232,6 +246,18 @@ function mergeConfig(data: any): PublicRuntimeConfig {
           providers.dodoCoffeeProductId ??
           DEFAULT_PUBLIC_CONFIG.providers.dodoCoffeeProductId,
         ),
+      dodoIndiaPremium6mProductId: String(
+        providers.dodoIndiaPremium6mProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoIndiaPremium6mProductId,
+      ),
+      dodoIndiaPremium12mProductId: String(
+        providers.dodoIndiaPremium12mProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoIndiaPremium12mProductId,
+      ),
+      dodoIndiaCoffeeProductId: String(
+        providers.dodoIndiaCoffeeProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoIndiaCoffeeProductId,
+      ),
       dodoLivePremium6mProductId:
         String(
           providers.dodoLivePremium6mProductId ??
@@ -247,6 +273,18 @@ function mergeConfig(data: any): PublicRuntimeConfig {
           providers.dodoLiveCoffeeProductId ??
           DEFAULT_PUBLIC_CONFIG.providers.dodoLiveCoffeeProductId,
         ),
+      dodoLiveIndiaPremium6mProductId: String(
+        providers.dodoLiveIndiaPremium6mProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoLiveIndiaPremium6mProductId,
+      ),
+      dodoLiveIndiaPremium12mProductId: String(
+        providers.dodoLiveIndiaPremium12mProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoLiveIndiaPremium12mProductId,
+      ),
+      dodoLiveIndiaCoffeeProductId: String(
+        providers.dodoLiveIndiaCoffeeProductId ??
+        DEFAULT_PUBLIC_CONFIG.providers.dodoLiveIndiaCoffeeProductId,
+      ),
     },
     payments: {
       production:
