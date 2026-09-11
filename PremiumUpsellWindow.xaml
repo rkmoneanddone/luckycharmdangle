@@ -139,7 +139,7 @@
           <TextBlock x:Name="StatusText" Margin="2,7,2,0" TextWrapping="Wrap" Foreground="#AEB4C3" FontSize="11.5" />
           <Button x:Name="UnlockButton" Content="Unlock Premium" Height="40" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="Unlock_Click" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
-            <Button Content="Have License or Already Paid"
+            <Button Content="Have License or Already Paid?"
                     Style="{StaticResource LinkButton}"
                     Click="Restore_Click" />
           </StackPanel>                    <TextBlock x:Name="RefundPolicyText"

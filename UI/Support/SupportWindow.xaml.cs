@@ -37,7 +37,7 @@ public partial class SupportWindow : Window
             _selectedAmount = 200m;
 
             MarketText.Text =
-                "India payment via Razorpay";
+                "India payment via Dodo Payments";
 
             Preset1Button.Content = "INR 100";
             Preset1Button.Tag = "100";
@@ -226,9 +226,7 @@ public partial class SupportWindow : Window
         _updatingAmount = false;
 
         var providerEnabled =
-            _isIndia
-                ? config.Providers.RazorpayEnabled
-                : config.Providers.DodoEnabled;
+            config.Providers.DodoEnabled;
 
         PayButton.IsEnabled = providerEnabled;
 
@@ -651,7 +649,7 @@ public partial class SupportWindow : Window
 
             await PollCheckoutAsync(
                 checkout.CheckoutId,
-                TimeSpan.FromSeconds(90));
+                TimeSpan.FromMinutes(6));
         }
         catch (Exception ex)
         {
