@@ -139,7 +139,21 @@
             <!-- CLOSE -->
             <!-- ================================================= -->
 
-            <Button Content="Close"
+                        <Button x:Name="AboutCoffeeButton"
+                    Content="☕ Buy Me a Coffee"
+                    Width="180"
+                    Height="36"
+                    Margin="0,10,0,8"
+                    HorizontalAlignment="Center"
+                    Background="#D9A928"
+                    Foreground="#17243A"
+                    BorderBrush="#B98512"
+                    BorderThickness="1"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Cursor="Hand"
+                    Click="AboutCoffeeButton_Click"/>
+<Button Content="Close"
                     Width="100"
                     Height="30"
                     HorizontalAlignment="Center"

@@ -93,4 +93,12 @@ public partial class AboutWindow : Window
 
         e.Handled = true;
     }
-}
+
+        private void AboutCoffeeButton_Click(object sender, RoutedEventArgs e)
+        {
+            var supportWindow = new LuckyDangle.UI.Support.SupportWindow
+            {
+                Owner = this
+            };
+            supportWindow.ShowDialog();
+        }}
