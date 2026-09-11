@@ -465,6 +465,8 @@ SupportEmailText.Text =
             SendPurchaseOtpButton.IsEnabled = false;
             VerifyPurchaseOtpButton.IsEnabled = false;
 
+            StatusText.Text = "";
+
             PurchaseOtpInfoText.Text =
                 "Email verified. You can now continue to payment.";
         }
@@ -473,6 +475,22 @@ SupportEmailText.Text =
             PurchaseOtpInfoText.Text = ex.Message;
             VerifyPurchaseOtpButton.IsEnabled = true;
         }
+    }
+    private void ResetPurchaseVerification()
+    {
+        purchaseVerificationToken = "";
+        verifiedPurchaseEmail = "";
+
+        EmailTextBox.IsReadOnly = false;
+
+        PurchaseOtpTextBox.Text = "";
+        PurchaseOtpTextBox.IsEnabled = false;
+
+        SendPurchaseOtpButton.IsEnabled = true;
+        VerifyPurchaseOtpButton.IsEnabled = false;
+
+        PurchaseOtpInfoText.Text =
+            "Please verify your email again before starting a new payment.";
     }
     private async void Unlock_Click(
         object sender,
@@ -548,7 +566,7 @@ SupportEmailText.Text =
                 "Complete payment securely in your browser. " +
                 "Lucky Dangle will detect it automatically.");
 
-            for (var attempt = 0; attempt < 10; attempt++)
+            for (var attempt = 0; attempt < 180; attempt++)
             {
                 await Task.Delay(TimeSpan.FromSeconds(2),
                     pollCts.Token);
@@ -576,6 +594,7 @@ SupportEmailText.Text =
                 {
                     PendingPremiumCheckoutStore.Clear();
                     RestoreAfterBrowserCheckout();
+                    ResetPurchaseVerification();
 
                     SetStatus(
                         paymentState == "failed" ||
@@ -590,10 +609,11 @@ SupportEmailText.Text =
             }
 
             RestoreAfterBrowserCheckout();
+            ResetPurchaseVerification();
 
             SetStatus(
                 "Payment has not been confirmed yet. " +
-                "You can retry payment or check again later.");
+                "Please verify your email again before starting another payment.");
         }
         catch (OperationCanceledException)
         {
@@ -602,6 +622,7 @@ SupportEmailText.Text =
         catch (Exception ex)
         {
             RestoreAfterBrowserCheckout();
+            ResetPurchaseVerification();
             SetStatus(ex.Message, true);
         }
         finally

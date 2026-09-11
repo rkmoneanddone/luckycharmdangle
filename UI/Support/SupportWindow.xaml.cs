@@ -646,7 +646,7 @@ public partial class SupportWindow : Window
 
             StatusText.Text =
                 _isIndia
-                    ? "Razorpay opened in your browser. Waiting for verified payment..."
+                    ? "Dodo opened in your browser. Waiting for verified payment..."
                     : "Dodo opened in your browser. Waiting for verified payment...";
 
             await PollCheckoutAsync(

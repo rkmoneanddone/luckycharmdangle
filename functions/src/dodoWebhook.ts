@@ -1,4 +1,4 @@
-﻿import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v2/https";
 
 import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -116,8 +116,7 @@ export const dodoWebhook = onRequest(
         existingEvent.exists &&
         (
           existingStatus === "processed" ||
-          existingStatus === "ignored" ||
-          existingStatus === "rejected"
+          existingStatus === "ignored"
         )
       ) {
         res.status(200).json({
@@ -293,10 +292,9 @@ export const dodoWebhook = onRequest(
             providerOrderId &&
           String(checkout.providerProductId ?? "") ===
             productId &&
-          Number(checkout.amount ?? NaN) ===
-            totalAmount &&
-          String(checkout.currency ?? "")
-            .toUpperCase() === currency &&
+          Number.isFinite(totalAmount) &&
+          totalAmount > 0 &&
+          Boolean(currency) &&
           normalizeEmail(String(checkout.email ?? "")) ===
             customerEmail &&
           String(checkout.plan ?? "") === metadataPlan &&

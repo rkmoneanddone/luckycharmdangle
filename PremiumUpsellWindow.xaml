@@ -139,8 +139,9 @@
           <TextBlock x:Name="StatusText" Margin="2,7,2,0" TextWrapping="Wrap" Foreground="#AEB4C3" FontSize="11.5" />
           <Button x:Name="UnlockButton" Content="Unlock Premium" Height="40" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="Unlock_Click" />
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0">
-            <TextBlock Text="Already purchased?" Foreground="#8F96A6" VerticalAlignment="Center" FontSize="12" />
-            <Button Content="Have a license?" Margin="3,0,0,0" Style="{StaticResource LinkButton}" Click="Restore_Click" />
+            <Button Content="Have License or Already Paid"
+                    Style="{StaticResource LinkButton}"
+                    Click="Restore_Click" />
           </StackPanel>                    <TextBlock x:Name="RefundPolicyText"
                      Text="Refund Policy: Premium payments are generally non-refundable."
                      Margin="8,5,8,0"
