@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "lucky-dangle"
-  }
+  },
+  "targets": {
+    "lucky-dangle": {
+      "hosting": {
+        "luckydangle-web": [
+          "luckydangle-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

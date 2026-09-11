@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lucky Dangle - Digital Charms for Windows</title>
+  <meta name="description" content="Lucky Dangle is a Windows desktop app for digital lucky charms, spiritual dangles and seasonal designs. Free and Premium collections available.">
+  <meta name="robots" content="index,follow">
+  <meta name="theme-color" content="#10182d">
+  <style>
+    :root{
+      --bg:#0b1020;
+      --bg2:#10182d;
+      --panel:#151f39;
+      --panel2:#1b2745;
+      --text:#f6f2e8;
+      --muted:#b9c3d8;
+      --gold:#d9b65c;
+      --gold2:#f5e7c2;
+      --blue:#8ca6ff;
+      --border:rgba(255,255,255,.10);
+      --max:1140px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 75% 0%,rgba(140,166,255,.13),transparent 28%),
+        linear-gradient(180deg,var(--bg),var(--bg2) 46%,var(--bg));
+      line-height:1.65;
+    }
+    a{color:inherit}
+    .wrap{width:min(var(--max),calc(100% - 34px));margin:auto}
+    header{
+      position:sticky;top:0;z-index:30;
+      backdrop-filter:blur(16px);
+      background:rgba(11,16,32,.88);
+      border-bottom:1px solid var(--border);
+    }
+    nav{display:flex;align-items:center;justify-content:space-between;min-height:70px;gap:18px}
+    .brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:.2px}
+    .brand img{width:34px;height:34px;object-fit:contain;border-radius:8px}
+    .links{display:flex;gap:18px;flex-wrap:wrap}
+    .links a{text-decoration:none;color:var(--muted);font-size:.93rem}
+    .hero{padding:82px 0 58px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:center}
+    .eyebrow{
+      display:inline-flex;align-items:center;gap:7px;
+      padding:7px 12px;border-radius:999px;
+      color:var(--gold2);border:1px solid rgba(217,182,92,.28);
+      background:rgba(217,182,92,.08);font-size:.87rem
+    }
+    h1{font-size:clamp(2.7rem,6vw,5.2rem);line-height:1.03;margin:20px 0 18px;letter-spacing:-2px}
+    h2{font-size:clamp(1.9rem,3.2vw,2.7rem);margin:0 0 12px}
+    h3{margin:0 0 8px}
+    .lead{font-size:1.12rem;color:var(--muted);max-width:760px}
+    .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+    .btn{
+      display:inline-block;text-decoration:none;padding:13px 19px;border-radius:12px;
+      font-weight:750;border:1px solid var(--border)
+    }
+    .btn.primary{background:var(--gold);color:#201806;border-color:transparent}
+    .btn.secondary{background:rgba(255,255,255,.04)}
+    .hero-visual{
+      min-height:430px;border-radius:26px;border:1px solid var(--border);
+      background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.015));
+      position:relative;overflow:hidden;display:grid;place-items:center;
+    }
+    .hero-visual:before{
+      content:"";position:absolute;inset:auto 15% 74% 15%;height:1px;background:rgba(217,182,92,.45)
+    }
+    .hero-visual img{
+      width:min(64%,260px);max-height:335px;object-fit:contain;
+      filter:drop-shadow(0 22px 30px rgba(0,0,0,.4))
+    }
+    section{padding:54px 0}
+    .sub{color:var(--muted);max-width:800px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:26px}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+      border:1px solid var(--border);border-radius:18px;padding:22px
+    }
+    .tag{
+      display:inline-block;padding:4px 9px;border-radius:999px;margin-bottom:9px;
+      background:rgba(140,166,255,.11);color:#d3dcff;font-size:.78rem
+    }
+    .muted{color:var(--muted)}
+    .price{font-size:2.15rem;font-weight:850;line-height:1.1;margin:8px 0}
+    .price-note{font-size:.86rem;color:var(--muted)}
+    .dynamic-status{font-size:.82rem;color:#91a9ff;margin-top:8px}
+    .gallery{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:26px
+    }
+    .dangle-card{
+      border:1px solid var(--border);border-radius:18px;padding:15px;
+      background:rgba(255,255,255,.035);text-align:center
+    }
+    .dangle-image-wrap{
+      height:220px;display:grid;place-items:center;border-radius:13px;
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012))
+    }
+    .dangle-image-wrap img{max-width:90%;max-height:205px;object-fit:contain}
+    .dangle-name{margin-top:11px;font-size:.92rem;color:var(--gold2)}
+    .steps{counter-reset:step;margin-top:24px}
+    .step{position:relative;padding-left:48px;margin:20px 0}
+    .step:before{
+      counter-increment:step;content:counter(step);position:absolute;left:0;top:0;
+      width:31px;height:31px;border-radius:50%;display:grid;place-items:center;
+      background:var(--gold);color:#201806;font-weight:850
+    }
+    .notice{
+      margin-top:23px;padding:15px 17px;border-radius:14px;
+      background:rgba(140,166,255,.08);border:1px solid rgba(140,166,255,.20)
+    }
+    .version-box{
+      margin-top:16px;display:inline-flex;gap:8px;align-items:center;
+      padding:7px 11px;border:1px solid var(--border);border-radius:999px;
+      color:var(--muted);font-size:.86rem
+    }
+    .version-box strong{color:var(--gold2)}
+    .legal{
+      background:rgba(255,255,255,.022);
+      border-top:1px solid var(--border);border-bottom:1px solid var(--border)
+    }
+    .legal h3{margin-top:27px}
+    footer{padding:36px 0 50px;color:var(--muted);font-size:.9rem}
+    code{font-family:Consolas,monospace}
+    @media(max-width:900px){
+      .hero-grid{grid-template-columns:1fr}
+      .hero-visual{min-height:330px}
+      .grid{grid-template-columns:1fr}
+      .gallery{grid-template-columns:repeat(2,1fr)}
+      .links{display:none}
+    }
+    @media(max-width:520px){
+      .gallery{grid-template-columns:1fr 1fr}
+      .dangle-image-wrap{height:170px}
+      .dangle-image-wrap img{max-height:155px}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <div class="brand">
+        <img src="assets/app-logo.png" alt="" onerror="this.style.display='none'">
+        <span>Lucky Dangle</span>
+      </div>
+      <div class="links">
+        <a href="#features">Features</a>
+        <a href="#gallery">Dangles</a>
+        <a href="#pricing">Premium</a>
+        <a href="#how">How it works</a>
+        <a href="#legal">Policies</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="eyebrow">Windows desktop digital charm app</span>
+        <h1>Keep a little luck on your screen.</h1>
+        <p class="lead">
+          Lucky Dangle turns the idea of traditional hanging charms into a lightweight
+          Windows desktop experience. Choose lucky symbols, spiritual designs and
+          seasonal dangles that hang beautifully from the top of your screen.
+        </p>
+        <div class="cta">
+          <a class="btn primary" href="https://apps.microsoft.com/detail/9N11M525D0M9" target="_blank" rel="noopener">
+            Download from Microsoft Store
+          </a>
+          <a class="btn secondary" href="#pricing">See Premium</a>
+        </div>
+        <div class="version-box">
+          Latest version available:
+          <strong id="latestVersion">Loading...</strong>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <img src="assets/dangles/nazar_guardian.png"
+             alt="Lucky Dangle desktop charm preview"
+             onerror="this.src='assets/app-logo.png'">
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>A digital dangle for your Windows desktop</h2>
+      <p class="sub">
+        People have long used charms, symbols and decorative hangings in homes,
+        workplaces and personal spaces. Lucky Dangle brings that familiar visual idea
+        to your computer screen as digital desktop software.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <span class="tag">Free + Premium</span>
+          <h3>Multiple collections</h3>
+          <p class="muted">Explore free designs and optional Premium collections, including lucky, spiritual and seasonal themes.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Desktop</span>
+          <h3>Designed to hang naturally</h3>
+          <p class="muted">Each dangle is positioned around its visual hanging point so it feels suspended rather than simply pasted onto the screen.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Microsoft Store</span>
+          <h3>Public Windows application</h3>
+          <p class="muted">Lucky Dangle is distributed to users through the Microsoft Store as a Windows desktop application.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="wrap">
+      <h2>Some Lucky Dangles</h2>
+      <p class="sub">
+        A selection from the growing Lucky Dangle collection. Availability may vary by
+        collection, Premium status and season.
+      </p>
+      <div class="gallery">
+        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/nazar_guardian.png" alt="Nazar Guardian digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Nazar Guardian</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/lucky_coin.png" alt="Lucky Coin digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Lucky Coin</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/hamsa_khamsa.png" alt="Hamsa Khamsa digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Hamsa Khamsa</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/maneki_neko.png" alt="Maneki Neko digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Maneki Neko</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/cornicello.png" alt="Cornicello digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Cornicello</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/rakhi_divine.png" alt="Rakhi Divine digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Rakhi Divine</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/rakhi_evil_eye.png" alt="Rakhi Evil Eye digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Rakhi Evil Eye</div>
+        </div>        <div class="dangle-card">
+          <div class="dangle-image-wrap">
+            <img src="assets/dangles/jet_stone_higuerilla.png" alt="Jet Stone Higuerilla digital dangle" loading="lazy">
+          </div>
+          <div class="dangle-name">Jet Stone Higuerilla</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <h2>Lucky Dangle Premium</h2>
+      <p class="sub">
+        Premium is optional. Pricing below is loaded from the Lucky Dangle service so
+        the website and application use the same current pricing source.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <span class="tag">India</span>
+          <h3>6 Months</h3>
+          <div class="price" id="india6m">Loading...</div>
+          <div class="price-note">Fixed price for 6 months Premium access.</div>
+        </div>
+
+        <div class="card">
+          <span class="tag">India</span>
+          <h3>12 Months</h3>
+          <div class="price" id="india12m">Loading...</div>
+          <div class="price-note">Fixed price for 12 months Premium access.</div>
+        </div>
+
+        <div class="card">
+          <span class="tag">International</span>
+          <h3>USD Plans</h3>
+          <div class="price"><span id="intl6m">Loading...</span> / <span id="intl12m">Loading...</span></div>
+          <div class="price-note">6 months / 12 months respectively.</div>
+        </div>
+      </div>
+
+      <div id="pricingStatus" class="dynamic-status">Loading current pricing from Lucky Dangle...</div>
+
+      <div class="notice">
+        Lucky Dangle is a digital software product. No physical charm, jewellery,
+        religious object or other physical merchandise is sold or shipped.
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How Premium works</h2>
+      <div class="steps">
+        <div class="step">
+          <strong>Open Lucky Dangle</strong><br>
+          <span class="muted">Choose the Premium option inside the Windows application.</span>
+        </div>
+        <div class="step">
+          <strong>Select 6 or 12 months</strong><br>
+          <span class="muted">The app displays the current price supplied by the Lucky Dangle service.</span>
+        </div>
+        <div class="step">
+          <strong>Complete secure browser checkout</strong><br>
+          <span class="muted">Payment is completed through our supported third-party payment provider. Lucky Dangle does not store card or banking credentials.</span>
+        </div>
+        <div class="step">
+          <strong>Premium is verified and activated</strong><br>
+          <span class="muted">After payment verification, Premium access is associated with the verified purchase details.</span>
+        </div>
+        <div class="step">
+          <strong>Restore Premium when needed</strong><br>
+          <span class="muted">Eligible access can be restored using the verified purchase email through the application's Restore Premium flow.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="legal" id="legal">
+    <div class="wrap">
+      <h2>Policies & legal information</h2>
+
+      <h3>Terms of Use</h3>
+      <p class="muted">
+        Lucky Dangle is licensed for personal use as a Windows desktop software product.
+        Premium access is time-limited according to the plan purchased. Users may not
+        redistribute, resell, copy, reverse engineer or commercially exploit the software
+        or its digital assets except where applicable law expressly permits.
+      </p>
+
+      <h3>Payments</h3>
+      <p class="muted">
+        Premium plans are sold at fixed prices displayed before checkout. Current pricing
+        is maintained by the Lucky Dangle service and may be updated for future purchases.
+        A purchase becomes effective only after payment has been successfully verified.
+      </p>
+
+      <h3>Refund & Cancellation Policy</h3>
+      <p class="muted">
+        Lucky Dangle Premium is a digital service. Requests concerning duplicate payments,
+        failed transactions, incorrect charges or technical inability to receive purchased
+        access should be reported promptly. Refund eligibility is reviewed according to
+        transaction status, whether digital access has already been delivered, payment
+        provider rules and applicable law.
+      </p>
+
+      <h3>Privacy Policy</h3>
+      <p class="muted">
+        Lucky Dangle may process limited information required to operate Premium services,
+        such as purchase email, transaction identifiers, selected plan, entitlement status
+        and technical service logs. Payment card and banking credentials are handled by the
+        payment provider and are not stored by Lucky Dangle. Information is used for payment
+        verification, Premium activation, restoration, fraud prevention, customer support
+        and service operation.
+      </p>
+
+      <h3>Digital Product Notice</h3>
+      <p class="muted">
+        Lucky Dangle supplies digital software functionality and digital artwork only.
+        The imagery may be inspired by cultural, festive, lucky or spiritual symbols, but
+        no physical product is supplied.
+      </p>
+
+      <h3>Microsoft Store</h3>
+      <p class="muted">
+        Lucky Dangle is independently developed and distributed through the Microsoft Store.
+        The Microsoft Store listing is the public download location for the Windows app.
+        Premium checkout may be processed separately through Lucky Dangle's supported payment flow.
+      </p>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <h2>Support & business contact</h2>
+      <div class="card">
+        <h3>Lucky Dangle</h3>
+        <p class="muted">
+          Windows desktop digital software product<br>
+          Publisher: Rohit Kumar Mallick<br>
+          Trade name: Meera Digitech<br>
+          India
+        </p>
+        <p>
+          Support:
+          <a href="mailto:connect@quickstories.in">connect@quickstories.in</a>
+        </p>
+        <p>
+          Microsoft Store:
+          <a href="https://apps.microsoft.com/detail/9N11M525D0M9" target="_blank" rel="noopener">
+            apps.microsoft.com/detail/9N11M525D0M9
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    &copy; 2026 Lucky Dangle. All rights reserved.
+  </div>
+</footer>
+
+<script>
+(function () {
+  const configUrl = "/api/config";
+
+  function moneyINR(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "Unavailable";
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2
+    }).format(n);
+  }
+
+  function moneyUSD(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "Unavailable";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: n % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2
+    }).format(n);
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  fetch(configUrl, { cache: "no-store" })
+    .then(function (response) {
+      if (!response.ok) throw new Error("Config request failed");
+      return response.json();
+    })
+    .then(function (data) {
+      const premium = data.premium || (data.config && data.config.premium) || {};
+      const updates = data.updates || (data.config && data.config.updates) || {};
+
+      setText("india6m", moneyINR(premium.india6mMin));
+      setText("india12m", moneyINR(premium.india12mMin));
+      setText("intl6m", moneyUSD(premium.international6mMin));
+      setText("intl12m", moneyUSD(premium.international12mMin));
+
+      if (updates.latestVersion) {
+        setText("latestVersion", updates.latestVersion);
+      } else {
+        setText("latestVersion", "Microsoft Store");
+      }
+
+      setText("pricingStatus", "Current pricing loaded from Lucky Dangle.");
+    })
+    .catch(function () {
+      setText("india6m", "See app");
+      setText("india12m", "See app");
+      setText("intl6m", "See app");
+      setText("intl12m", "See app");
+      setText("latestVersion", "Microsoft Store");
+      setText("pricingStatus", "Current pricing is available inside the Lucky Dangle app.");
+    });
+})();
+</script>
+</body>
+</html>
