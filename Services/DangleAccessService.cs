@@ -24,7 +24,7 @@ public static class DangleAccessService
 
     public static bool CanUse(IDangle dangle)
     {
-        return !dangle.RequiresPremiumAccess ||
+        return !dangle.IsPremium ||
                HasActivePremiumEntitlement;
     }
 

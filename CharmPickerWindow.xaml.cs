@@ -978,7 +978,6 @@ public partial class CharmPickerWindow : Window
             dangle.IsPremium;
 
         bool locked =
-            dangle.RequiresPremiumAccess &&
             !DangleAccessService.CanUse(dangle);
 
 
