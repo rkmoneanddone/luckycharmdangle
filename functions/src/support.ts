@@ -125,12 +125,14 @@ async function createDodoCoffeeCheckout(
           {
             product_id: productId,
             quantity: 1,
+            amount: amountMinor,
           },
         ],
         customer: {
           email,
           name: "Lucky Dangle Supporter",
         },
+        billing_currency: currency,
         feature_flags: {
           allow_customer_editing_email: false,
           allow_currency_selection: false,

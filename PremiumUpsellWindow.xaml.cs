@@ -553,10 +553,9 @@ private void ApplyMarketPricing()
                 "Complete payment securely in your browser. " +
                 "Lucky Dangle will detect it automatically.");
 
-            for (var attempt = 0; attempt < 15; attempt++)
+            for (var attempt = 0; attempt < 10; attempt++)
             {
-                await Task.Delay(
-                    TimeSpan.FromSeconds(3),
+                await Task.Delay(TimeSpan.FromSeconds(2),
                     pollCts.Token);
 
                 var status =

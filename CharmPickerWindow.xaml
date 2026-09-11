@@ -543,7 +543,7 @@
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left">
 
-                    <TextBlock Text="Display Mode"
+                    <TextBlock Text="Mode"
                                FontFamily="Georgia"
                                FontSize="13"
                                FontWeight="Bold"
@@ -633,14 +633,14 @@
                     <!-- PREMIUM -->
 
                     <Button x:Name="PremiumAccessButton"
-                            Width="142"
+                            Width="116"
                             Height="36"
                             Margin="0,0,8,0"
                             Padding="0"
                             Background="Transparent"
                             BorderThickness="0"
                             Cursor="Hand"
-                            Click="PremiumAccessButton_Click">
+                            Click="PremiumAccessButton_Click" MinWidth="116">
                         <Button.Template>
                             <ControlTemplate TargetType="Button">
                                 <Border Background="#261E0F"
@@ -674,8 +674,7 @@
 
                     <!-- COFFEE -->
 
-                    <Button x:Name="BuyCoffeeButton"
-                            Width="108"
+                    <Button x:Name="BuyCoffeeButton" Width="104"
                             Height="36"
                             Margin="0,0,8,0"
                             Padding="0"
