@@ -108,12 +108,7 @@ private void ApplyMarketPricing()
             RefundPolicyText.Text =
                 "Refund Policy: " +
                 runtimeConfig.RefundPolicyText;
-
-            PrivacyUrlText.Text =
-                "Privacy: " +
-                runtimeConfig.PrivacyUrl;
-
-            SupportEmailText.Text =
+SupportEmailText.Text =
                 "Support: " +
                 runtimeConfig.SupportEmail;
             ApplyMarketPricing();
@@ -672,7 +667,7 @@ private void ApplyMarketPricing()
                 EmailTextBox.Text.Trim();
         }
 
-        Height = 400;
+        Height = 480;
     }
 
     private async void SendRestoreCode_Click(
@@ -772,7 +767,7 @@ private void ApplyMarketPricing()
         RestorePanel.Visibility = Visibility.Collapsed;
         SuccessPanel.Visibility = Visibility.Collapsed;
         PurchasePanel.Visibility = Visibility.Visible;
-        Height = 535;
+        Height = 590;
     }
 
     private void SaveClose_Click(
