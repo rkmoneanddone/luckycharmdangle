@@ -296,6 +296,7 @@ export const createCoffeeCheckout = onRequest(
         provider: "dodo",
         environment,
         status: "created",
+        amount: amountMinor,
         currency,
         providerProductId: productId,
         createdAt: Timestamp.now(),
@@ -723,6 +724,7 @@ export const coffeeReturn = onRequest(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lucky Dangle - Payment Status</title>
+${status === "paid" || status === "cancelled" || status === "canceled" || terminalFailure ? "" : '<meta http-equiv="refresh" content="3">'}
 <style>
 body{
   font-family:Segoe UI,Arial,sans-serif;

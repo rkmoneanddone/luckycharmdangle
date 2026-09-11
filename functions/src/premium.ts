@@ -500,6 +500,7 @@ if (!productId) {
           provider: "dodo",
           environment,
           status: "created",
+          amount: requestedMinor,
           currency: dodoCurrency,
           providerProductId: productId,
           createdAt: Timestamp.now(),
@@ -1124,6 +1125,7 @@ export const premiumReturn = onRequest(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lucky Dangle Premium</title>
+${status === "paid" || status === "cancelled" || status === "canceled" || terminalFailure ? "" : '<meta http-equiv="refresh" content="3">'}
 <style>
 body{
   font-family:Segoe UI,Arial,sans-serif;
