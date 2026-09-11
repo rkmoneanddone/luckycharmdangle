@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net.Mail;
 using System.Windows;
@@ -189,7 +190,7 @@ private void ApplyMarketPricing()
                 else
                 {
                     SetStatus(
-                        "Your previous payment has not been confirmed yet. You can try again or check later.");
+                        "Payment was not completed or confirmed. You can retry now or check again later.");
                 }
             }
         }
@@ -552,7 +553,7 @@ private void ApplyMarketPricing()
                 "Complete payment securely in your browser. " +
                 "Lucky Dangle will detect it automatically.");
 
-            for (var attempt = 0; attempt < 30; attempt++)
+            for (var attempt = 0; attempt < 15; attempt++)
             {
                 await Task.Delay(
                     TimeSpan.FromSeconds(3),
@@ -871,5 +872,23 @@ private void ApplyMarketPricing()
         pollCts?.Dispose();
         RestoreAfterBrowserCheckout();
         base.OnClosed(e);
+    }
+
+    private void Hyperlink_RequestNavigate(
+        object sender,
+        System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
+            {
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+        }
+
+        e.Handled = true;
     }
 }

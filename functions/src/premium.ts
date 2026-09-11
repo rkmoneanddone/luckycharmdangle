@@ -297,14 +297,12 @@ async function createDodoPremiumCheckout(
           {
             product_id: productId,
             quantity: 1,
-            amount: amountUsdCents,
           },
         ],
         customer: {
           email,
           name: "Lucky Dangle Customer",
         },
-        billing_currency: currency,
         feature_flags: {
           allow_customer_editing_email: false,
           allow_currency_selection: false,
@@ -502,7 +500,6 @@ if (!productId) {
           provider: "dodo",
           environment,
           status: "created",
-          amount: requestedMinor,
           currency: dodoCurrency,
           providerProductId: productId,
           createdAt: Timestamp.now(),
@@ -556,7 +553,6 @@ if (!productId) {
         provider: "razorpay",
         environment,
         status: "created",
-        amount: requestedMinor,
         currency: "INR",
         createdAt: Timestamp.now(),
       });

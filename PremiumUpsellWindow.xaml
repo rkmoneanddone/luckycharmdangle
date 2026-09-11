@@ -1,4 +1,4 @@
-﻿<Window x:Class="LuckyDangle.PremiumUpsellWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Lucky Dangle Premium" Width="540" Height="535" MinHeight="300" MaxHeight="620" WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Loaded="Window_Loaded">
+<Window x:Class="LuckyDangle.PremiumUpsellWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Lucky Dangle Premium" Width="540" Height="535" MinHeight="300" MaxHeight="620" WindowStartupLocation="CenterOwner" WindowStyle="None" ResizeMode="NoResize" AllowsTransparency="True" Background="Transparent" ShowInTaskbar="False" Loaded="Window_Loaded">
   <Window.Resources>
     <LinearGradientBrush x:Key="GoldBrush" StartPoint="0,0" EndPoint="1,1">
       <GradientStop Color="#FFF6D365" Offset="0" />
@@ -184,7 +184,17 @@
           <TextBlock x:Name="RestoreInfoText" Margin="0,8,0,0" Text="" TextWrapping="Wrap" Foreground="#8F96A6" FontSize="11.5" />
           <Button x:Name="VerifyRestoreButton" Content="Verify &amp; Restore" Margin="0,10,0,0" Style="{StaticResource PrimaryButton}" Click="VerifyRestore_Click" />
           <Button Content="Back to Purchase" Margin="0,10,0,0" Style="{StaticResource LinkButton}" Click="BackToPurchase_Click" />
-        </StackPanel>
+                    <TextBlock Margin="0,4,0,0"
+                       HorizontalAlignment="Center"
+                       FontSize="12"
+                       Foreground="#9EA6B8">
+                <Run Text="Website: "/>
+                <Hyperlink NavigateUri="https://luckydangle-app.web.app/"
+                           RequestNavigate="Hyperlink_RequestNavigate">
+                    luckydangle-app.web.app
+                </Hyperlink>
+            </TextBlock>
+</StackPanel>
       </Grid>
     </Grid>
   </Border>

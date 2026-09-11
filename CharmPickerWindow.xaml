@@ -675,7 +675,7 @@
                     <!-- COFFEE -->
 
                     <Button x:Name="BuyCoffeeButton"
-                            Width="162"
+                            Width="108"
                             Height="36"
                             Margin="0,0,8,0"
                             Padding="0"
@@ -698,7 +698,7 @@
                                                    Foreground="#7A5510"
                                                    Margin="0,0,6,0"
                                                    VerticalAlignment="Center"/>
-                                        <TextBlock Text="Buy Rohit a Coffee"
+                                        <TextBlock Text="☕ Coffee"
                                                    Foreground="#7A5510"
                                                    FontFamily="Georgia"
                                                    FontStyle="Italic"
